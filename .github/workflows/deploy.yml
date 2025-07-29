@@ -6,6 +6,16 @@ on:
   pull_request:
     branches: [ main ]
 
+# GitHub Pages 배포를 위한 권한 설정
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 환경 변수 설정
+env:
+  NODE_VERSION: '18'
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -15,9 +25,9 @@ jobs:
       uses: actions/checkout@v3
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: travel-app/package-lock.json
         
@@ -25,15 +35,19 @@ jobs:
       run: |
         cd travel-app
         npm ci
+        echo "✅ Dependencies installed successfully"
         
     - name: Build
       run: |
         cd travel-app
         npm run build
+        echo "✅ Build completed successfully"
+        ls -la build/
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/main'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./travel-app/build 
+        publish_dir: ./travel-app/build
+        force_orphan: true 
