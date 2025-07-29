@@ -16,13 +16,13 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://github.com/your-username/WORLD-PROJECT",
+  "homepage": "https://github.com/Jisoo-S/WORLD-PROJECT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/WORLD-PROJECT.git"
+    "url": "https://github.com/Jisoo-S/WORLD-PROJECT.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/WORLD-PROJECT/issues"
+    "url": "https://github.com/Jisoo-S/WORLD-PROJECT/issues"
   },
   "private": true,
   "dependencies": {
