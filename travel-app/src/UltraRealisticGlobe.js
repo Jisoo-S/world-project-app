@@ -419,57 +419,57 @@ const UltraRealisticGlobe = () => {
 
       {/* 헤더 제거 */}
 
-      {/* 지구본 모드 선택 - 모바일에서만 크기 축소 */}
+      {/* 지구본 모드 선택 - 정사각형으로 변경 */}
       <div className={`absolute top-6 left-6 bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 z-10 ${
         isMobile 
-          ? 'rounded-xl p-3' 
-          : 'rounded-2xl p-4'
+          ? 'rounded-xl p-3 w-32 h-32' 
+          : 'rounded-2xl p-4 w-40 h-40'
       }`}>
         <div className={`text-white font-medium mb-2 ${
           isMobile ? 'text-xs' : 'text-sm font-bold mb-3'
         }`}>🛰️ 지구본 모드</div>
-        <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
+        <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
           <button
             onClick={() => changeGlobeMode('satellite')}
             className={`w-full font-medium transition-all ${
               isMobile 
-                ? 'px-3 py-1.5 rounded-md text-xs' 
-                : 'px-4 py-2 rounded-lg text-sm'
+                ? 'px-2 py-1 rounded-md text-xs' 
+                : 'px-3 py-1.5 rounded-lg text-xs'
             } ${
               globeMode === 'satellite' 
                 ? 'bg-blue-600 text-white shadow-lg' 
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            🛰️ 위성 뷰
+            🛰️ 위성
           </button>
           <button
             onClick={() => changeGlobeMode('night')}
             className={`w-full font-medium transition-all ${
               isMobile 
-                ? 'px-3 py-1.5 rounded-md text-xs' 
-                : 'px-4 py-2 rounded-lg text-sm'
+                ? 'px-2 py-1 rounded-md text-xs' 
+                : 'px-3 py-1.5 rounded-lg text-xs'
             } ${
               globeMode === 'night' 
                 ? 'bg-blue-600 text-white shadow-lg' 
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            🌙 야간 뷰
+            🌙 야간
           </button>
           <button
             onClick={() => changeGlobeMode('topographic')}
             className={`w-full font-medium transition-all ${
               isMobile 
-                ? 'px-3 py-1.5 rounded-md text-xs' 
-                : 'px-4 py-2 rounded-lg text-sm'
+                ? 'px-2 py-1 rounded-md text-xs' 
+                : 'px-3 py-1.5 rounded-lg text-xs'
             } ${
               globeMode === 'topographic' 
                 ? 'bg-blue-600 text-white shadow-lg' 
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            🗺️ 지형 뷰
+            🗺️ 지형
           </button>
         </div>
       </div>
@@ -620,22 +620,46 @@ const UltraRealisticGlobe = () => {
       {/* 컨트롤 패널 - 빠른 이동과 지구본 조작을 한 박스에 */}
       <div className="absolute bottom-6 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10">
         <div className="flex gap-6">
-          {/* 빠른 이동 */}
+          {/* 빠른 이동 - 대륙별 */}
           <div>
-            <div className="text-white font-medium text-sm mb-3">🚀 빠른 이동</div>
+            <div className="text-white font-medium text-sm mb-3">🚀 대륙별 이동</div>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { country: 'South Korea', flag: '🇰🇷' },
-                { country: 'Japan', flag: '🇯🇵' },
-                { country: 'United States', flag: '🇺🇸' },
-                { country: 'France', flag: '🇫🇷' },
-                { country: 'Italy', flag: '🇮🇹' },
-                { country: 'Germany', flag: '🇩🇪' }
-              ].map(({country, flag}) => (
+                { continent: 'Asia', flag: 'AS', countries: ['South Korea', 'Japan'], description: 'AS' },
+                { continent: 'Europe', flag: 'EU', countries: ['France', 'Italy', 'Germany'], description: 'EU' },
+                { continent: 'North America', flag: 'NA', countries: ['United States'], description: 'NA' },
+                { continent: 'South America', flag: 'SA', countries: [], description: 'SA' },
+                { continent: 'Africa', flag: 'AF', countries: [], description: 'AF' },
+                { continent: 'Oceania', flag: 'AU', countries: [], description: 'AU' }
+              ].map(({continent, flag, countries, description}) => (
                 <button
-                  key={country}
-                  onClick={() => goToCountry(country)}
-                  className="p-2 bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg text-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50"
+                  key={continent}
+                  onClick={() => {
+                    // 해당 대륙에 방문한 국가가 있으면 첫 번째 국가로 이동
+                    const visitedCountries = countries.filter(country => userTravelData[country]);
+                    if (visitedCountries.length > 0) {
+                      goToCountry(visitedCountries[0]);
+                    } else {
+                      // 방문한 국가가 없으면 대륙 중심으로 이동
+                      const continentCoords = {
+                        'Asia': [35, 100],
+                        'Europe': [50, 10],
+                        'North America': [45, -100],
+                        'South America': [-15, -60],
+                        'Africa': [0, 20],
+                        'Oceania': [-25, 140]
+                      };
+                      if (globeRef.current && continentCoords[continent]) {
+                        globeRef.current.pointOfView({ 
+                          lat: continentCoords[continent][0], 
+                          lng: continentCoords[continent][1], 
+                          altitude: 2.0 
+                        }, 1500);
+                      }
+                    }
+                  }}
+                  className="p-2 bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-sm font-bold min-h-[44px] min-w-[44px]"
+                  title={description}
                 >
                   {flag}
                 </button>
