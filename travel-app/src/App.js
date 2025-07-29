@@ -1,10 +1,10 @@
 import React from 'react';
-import TravelGlobe from './TravelGlobe';
+import UltraRealisticGlobe from './UltraRealisticGlobe';
 
 function App() {
   return (
     <div className="App">
-      <TravelGlobe />
+      <UltraRealisticGlobe />
     </div>
   );
 }

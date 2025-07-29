@@ -1,6 +1,29 @@
 {
-  "name": "travel-app",
-  "version": "0.1.0",
+  "name": "ultra-realistic-earth-archive",
+  "version": "2.0.0",
+  "description": "실제 대륙 모양을 표현하는 3D 여행 지구본 - Globe.gl 기반",
+  "keywords": [
+    "react",
+    "globe.gl", 
+    "three.js",
+    "3d",
+    "earth",
+    "travel",
+    "visualization",
+    "interactive",
+    "realistic",
+    "satellite"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "homepage": "https://github.com/your-username/WORLD-PROJECT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/WORLD-PROJECT.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/WORLD-PROJECT/issues"
+  },
   "private": true,
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",
@@ -22,7 +45,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "git-upload": "upload.bat",
+    "deploy": "npm run build && echo 'Build completed! Ready for deployment.'"
   },
   "eslintConfig": {
     "extends": [
@@ -41,5 +66,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }
