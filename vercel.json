@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd travel-app && npm install && npm run build",
+  "outputDirectory": "travel-app/build",
+  "framework": null,
+  "env": {
+    "PUBLIC_URL": "/"
+  }
+}
