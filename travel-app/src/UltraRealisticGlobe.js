@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Globe from 'globe.gl';
 
 // 도시 버튼 컴포넌트
-const CityButton = ({ city, cityTrips, onDeleteCityTrip }) => {
+const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip }) => {
   const [showDates, setShowDates] = useState(false);
 
   // 여행 기간을 시작일 기준으로 오름차순 정렬
@@ -23,13 +23,22 @@ const CityButton = ({ city, cityTrips, onDeleteCityTrip }) => {
           {sortedCityTrips.map((trip, tripIndex) => (
             <div key={tripIndex} className="flex items-center justify-between text-xs text-slate-300">
               <span>{trip.startDate} ~ {trip.endDate}</span>
-              <button
-                onClick={() => onDeleteCityTrip(city, trip)}
-                className="text-red-400 hover:text-red-600 ml-2"
-                title="이 여행 삭제"
-              >
-                ✖
-              </button>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => onEditTrip(trip)}
+                  className="text-blue-400 hover:text-blue-600"
+                  title="이 여행 수정"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => onDeleteCityTrip(city, trip)}
+                  className="text-red-400 hover:text-red-600"
+                  title="이 여행 삭제"
+                >
+                  ✖
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -44,6 +53,7 @@ const UltraRealisticGlobe = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState('로딩 중...'); // Simplified initial status
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedLine, setSelectedLine] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [globeMode, setGlobeMode] = useState('satellite');
@@ -59,6 +69,8 @@ const UltraRealisticGlobe = () => {
   });
   const [showDateErrorModal, setShowDateErrorModal] = useState(false);
   const [showGlobeControlsOnMobile, setShowGlobeControlsOnMobile] = useState(true); // New state for mobile controls
+  const [showContinentPanel, setShowContinentPanel] = useState(false);
+  const [editingTrip, setEditingTrip] = useState(null);
 
   // 국가 좌표 및 한글 이름 데이터
   const countryData = {
@@ -195,16 +207,20 @@ const UltraRealisticGlobe = () => {
       let startPointCoords;
 
       // Check for a break in continuous travel (e.g., more than 1 day gap)
+      let startCountryName = 'South Korea';
       if (previousTripEndDate && (currentTripStartDate - previousTripEndDate) / (1000 * 60 * 60 * 24) > 1) {
         // If there's a significant gap, start from Korea again
         startPointCoords = koreaCoords;
+        startCountryName = 'South Korea';
       } else {
         // Otherwise, continue from the previous country
         startPointCoords = previousCoords;
+        // Find the country name for previous coords
+        const prevCountry = allTripsFlat[allTripsFlat.indexOf(currentTrip) - 1];
+        startCountryName = prevCountry ? prevCountry.country : 'South Korea';
       }
 
       // Only draw an arc if the start and end points are different
-      // and ensure we are not trying to connect a country to itself directly
       if (startPointCoords[0] !== currentTrip.coords[0] || startPointCoords[1] !== currentTrip.coords[1]) {
         routes.push({
           startLat: startPointCoords[0],
@@ -213,7 +229,11 @@ const UltraRealisticGlobe = () => {
           endLng: currentTrip.coords[1],
           // All lines are the same color and solid as per new request
           color: '#60a5fa', // A consistent blue color
-          stroke: 2
+          stroke: 2,
+          startCountry: startCountryName,
+          endCountry: currentTrip.country,
+          startDate: currentTrip.startDate,
+          endDate: currentTrip.endDate
         });
       }
       
@@ -222,6 +242,66 @@ const UltraRealisticGlobe = () => {
     });
 
     return routes;
+  };
+
+  // 여행지 수정 함수
+  const updateTravelDestination = () => {
+    if (!editingTrip) return;
+
+    // 날짜 유효성 검사
+    const startDateObj = new Date(editingTrip.startDate);
+    const endDateObj = new Date(editingTrip.endDate);
+
+    if (startDateObj > endDateObj) {
+      setShowDateErrorModal(true);
+      return;
+    }
+
+    setUserTravelData(prev => {
+      const newData = { ...prev };
+      const countryEnglishName = selectedCountry.country;
+      const countryDataToUpdate = newData[countryEnglishName];
+
+      if (countryDataToUpdate) {
+        const tripIndex = countryDataToUpdate.trips.findIndex(trip => 
+          trip.startDate === editingTrip.originalStartDate && 
+          trip.endDate === editingTrip.originalEndDate &&
+          JSON.stringify(trip.cities) === JSON.stringify(editingTrip.originalCities)
+        );
+
+        if (tripIndex > -1) {
+          const updatedTrips = [...countryDataToUpdate.trips];
+          updatedTrips[tripIndex] = {
+            cities: editingTrip.cities,
+            startDate: editingTrip.startDate,
+            endDate: editingTrip.endDate
+          };
+
+          const allEndDates = updatedTrips.map(trip => new Date(trip.endDate));
+          const latestEndDate = allEndDates.length > 0 ? new Date(Math.max(...allEndDates)).toISOString().split('T')[0] : '';
+
+          newData[countryEnglishName] = {
+            ...countryDataToUpdate,
+            trips: updatedTrips,
+            lastVisit: latestEndDate,
+            cities: [...new Set(updatedTrips.flatMap(trip => trip.cities))],
+            visits: updatedTrips.length
+          };
+
+          // Update selectedCountry to reflect the changes immediately
+          const style = getVisitStyle(updatedTrips.length);
+          setSelectedCountry({
+            ...newData[countryEnglishName],
+            country: countryEnglishName,
+            displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
+            color: style.color
+          });
+        }
+      }
+      return newData;
+    });
+
+    setEditingTrip(null);
   };
 
   // 여행지 추가 함수
@@ -342,7 +422,13 @@ const UltraRealisticGlobe = () => {
             lastVisit: latestEndDate,
           };
           // Update selectedCountry to reflect the changes immediately
-          setSelectedCountry(newData[countryEnglishName]);
+          const style = getVisitStyle(updatedTrips.length);
+          setSelectedCountry({
+            ...newData[countryEnglishName],
+            country: countryEnglishName,
+            displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
+            color: style.color
+          });
         }
       }
       return newData;
@@ -403,10 +489,10 @@ const UltraRealisticGlobe = () => {
         const travelPoints = createTravelPoints();
         globeInstance
           .pointsData(travelPoints)
-          .pointAltitude(d => d.size)
+          .pointAltitude(0.01)
           .pointColor(d => d.color)
-          .pointRadius(0.5)
-          .pointResolution(12)
+          .pointRadius(d => d.size)
+          .pointResolution(32)
           .pointLabel(d => `
             <div style="
               background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,20,40,0.9)); 
@@ -433,23 +519,11 @@ const UltraRealisticGlobe = () => {
                 <strong style="color: #60a5fa;">방문 도시:</strong><br/>
                 <span style="color: #e2e8f0;">${d.cities.join(' • ')}</span>
               </div>
-              <div style="
-                padding: 8px; 
-                background: rgba(255,255,255,0.1); 
-                border-radius: 6px;
-                font-style: italic;
-                color: #f1f5f9;
-                font-size: 13px;
-              ">
-                "${d.description}"
-              </div>
             </div>
           `)
           .onPointClick((point) => {
             setSelectedCountry(point);
-            if (window.innerWidth <= 768) { // If mobile, hide controls when country selected
-              setShowGlobeControlsOnMobile(false);
-            }
+            setSelectedLine(null); // Close line info when clicking a country
             // 카메라 이동
             if (globeInstance) {
               globeInstance.pointOfView({ 
@@ -466,9 +540,29 @@ const UltraRealisticGlobe = () => {
           .arcsData(routes)
           .arcColor(d => d.color) // Use the color defined in createTravelRoutes
           .arcDashLength(1) // Make lines solid
-          .arcDashGap(0) // No gaps
-          .arcStroke(2) // Consistent stroke
-          .arcAltitude(0.1); // Consistent altitude
+          .arcAltitude(arc => {
+            // Calculate great circle distance
+            const dx = arc.endLng - arc.startLng;
+            const dy = arc.endLat - arc.startLat;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Higher altitude for longer distances (especially trans-Pacific routes)
+            if (distance > 180) { // Trans-Pacific or very long routes
+              return 0.5;
+            } else if (distance > 90) {
+              return 0.3;
+            } else {
+              return 0.1;
+            }
+          })
+          .arcStroke(1.5)
+          .arcDashLength(1)
+          .arcDashGap(0)
+          .arcDashAnimateTime(0)
+          .onArcClick(arc => {
+            setSelectedLine(arc);
+            setSelectedCountry(null); // Close country info when clicking a line
+          }); // Consistent altitude
 
         if (!mounted) return;
 
@@ -643,13 +737,13 @@ const UltraRealisticGlobe = () => {
         }`}>
         <div className={`text-white font-medium mb-2 ${
           isMobile ? 'text-xs' : 'text-sm font-bold mb-3'
-        }`}>🛰️ 지구본 모드</div>
+        }`}>🛰️ 모드</div>
         <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
           <button
             onClick={() => changeGlobeMode('satellite')}
             className={`w-full font-medium transition-all ${
               isMobile 
-                ? 'px-2 py-1 rounded-md text-xs' 
+                ? 'px-1 py-0.5 rounded-md text-xs' 
                 : 'px-3 py-1.5 rounded-lg text-xs'
             } ${
               globeMode === 'satellite' 
@@ -657,13 +751,13 @@ const UltraRealisticGlobe = () => {
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            🛰️ 위성
+            위성
           </button>
           <button
             onClick={() => changeGlobeMode('night')}
             className={`w-full font-medium transition-all ${
               isMobile 
-                ? 'px-2 py-1 rounded-md text-xs' 
+                ? 'px-1 py-0.5 rounded-md text-xs' 
                 : 'px-3 py-1.5 rounded-lg text-xs'
             } ${
               globeMode === 'night' 
@@ -671,13 +765,13 @@ const UltraRealisticGlobe = () => {
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            🌙 야간
+            야간
           </button>
           <button
             onClick={() => changeGlobeMode('topographic')}
             className={`w-full font-medium transition-all ${
               isMobile 
-                ? 'px-2 py-1 rounded-md text-xs' 
+                ? 'px-1 py-0.5 rounded-md text-xs' 
                 : 'px-3 py-1.5 rounded-lg text-xs'
             } ${
               globeMode === 'topographic' 
@@ -685,7 +779,7 @@ const UltraRealisticGlobe = () => {
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            🗺️ 지형
+            지형
           </button>
         </div>
         </div>
@@ -705,7 +799,7 @@ const UltraRealisticGlobe = () => {
                 }, 300);
               }
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg transition-all text-sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg transition-all text-sm w-10 h-10 flex items-center justify-center"
           >
             +
           </button>
@@ -722,7 +816,7 @@ const UltraRealisticGlobe = () => {
                 }, 300);
               }
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg transition-all text-sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg transition-all text-sm w-10 h-10 flex items-center justify-center"
           >
             -
           </button>
@@ -816,6 +910,7 @@ const UltraRealisticGlobe = () => {
                           displayCountry: displayCountryName,
                           color: style.color // Pass color for consistent display
                         }); 
+                        setSelectedLine(null); // Close line info when selecting a country
                         setShowMobileStats(false);
                         if (isMobile) { // Hide controls when country is selected from stats on mobile
                           setShowGlobeControlsOnMobile(false);
@@ -846,7 +941,9 @@ const UltraRealisticGlobe = () => {
 
       {/* 선택된 국가 정보 */}
       {selectedCountry && (
-        <div className="absolute bottom-6 left-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 z-10 min-w-96 max-w-lg">
+        <div className={`absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 z-10 ${
+          isMobile ? 'w-[calc(100%-2rem)]' : 'min-w-96 max-w-lg'
+        }`}>
           <button 
             onClick={() => {
               setSelectedCountry(null);
@@ -887,6 +984,7 @@ const UltraRealisticGlobe = () => {
                         city={city} 
                         cityTrips={cityTrips} 
                         onDeleteCityTrip={deleteCityTrip} // Pass delete function
+                        onEditTrip={(trip) => setEditingTrip({ ...trip, originalStartDate: trip.startDate, originalEndDate: trip.endDate, originalCities: trip.cities })}
                       />
                     );
                 })}
@@ -896,9 +994,111 @@ const UltraRealisticGlobe = () => {
         </div>
       )}
 
+      {/* Travel Line Info Panel */}
+      {selectedLine && (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 text-center">
+          <button 
+            onClick={() => setSelectedLine(null)}
+            className="absolute top-2 right-2 text-slate-400 hover:text-red-400 text-xl transition-colors"
+          >
+            ×
+          </button>
+          <div className="text-white font-bold text-md mb-1">{countryData[selectedLine.startCountry]?.koreanName || selectedLine.startCountry} → {countryData[selectedLine.endCountry]?.koreanName || selectedLine.endCountry}</div>
+          <div className="text-slate-400 text-sm">{selectedLine.startDate} ~ {selectedLine.endDate}</div>
+        </div>
+      )}
+
       {/* 컨트롤 패널 - 빠른 이동과 지구본 조작을 한 박스에 */}
-      {/* 모바일에서 selectedCountry가 있을 때 숨김 처리 */}
-      {(!isMobile || showGlobeControlsOnMobile) && (
+      {isMobile ? (
+        <div className="absolute bottom-6 right-6 z-10">
+          <button
+            onClick={() => setShowContinentPanel(!showContinentPanel)}
+            className="bg-slate-900/95 backdrop-blur-lg rounded-full shadow-2xl p-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
+          >
+            🚀
+          </button>
+          {showContinentPanel && (
+            <div className="absolute bottom-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-6">
+              <div className="flex gap-8">
+                {/* 빠른 이동 - 대륙별 */}
+                <div>
+                  <div className="text-white font-medium text-base mb-3 flex items-center gap-2">
+                    <span className="text-lg">🚀</span>
+                    <span>대륙별 이동</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { continent: 'Asia', flag: 'AS', countries: ['South Korea', 'Japan'], description: 'AS' },
+                      { continent: 'Europe', flag: 'EU', countries: ['France', 'Italy', 'Germany'], description: 'EU' },
+                      { continent: 'North America', flag: 'NA', countries: ['United States'], description: 'NA' },
+                      { continent: 'South America', flag: 'SA', countries: [], description: 'SA' },
+                      { continent: 'Africa', flag: 'AF', countries: [], description: 'AF' },
+                      { continent: 'Oceania', flag: 'AU', countries: [], description: 'AU' }
+                    ].map(({continent, flag, countries, description}) => (
+                      <button
+                        key={continent}
+                        onClick={() => {
+                          // 해당 대륙에 방문한 국가가 있으면 첫 번째 국가로 이동
+                          const visitedCountries = countries.filter(country => userTravelData[country]);
+                          if (visitedCountries.length > 0) {
+                            goToCountry(visitedCountries[0]);
+                          } else {
+                            // 방문한 국가가 없으면 대륙 중심으로 이동
+                            const continentCoords = {
+                              'Asia': [35, 100],
+                              'Europe': [50, 10],
+                              'North America': [45, -100],
+                              'South America': [-15, -60],
+                              'Africa': [0, 20],
+                              'Oceania': [-25, 140]
+                            };
+                            if (globeRef.current && continentCoords[continent]) {
+                              globeRef.current.pointOfView({ 
+                                lat: continentCoords[continent][0], 
+                                lng: continentCoords[continent][1], 
+                                altitude: 2.0 
+                              }, 1500);
+                            }
+                          }
+                          setShowContinentPanel(false); // Close panel after selection
+                        }}
+                        className="w-28 h-28 bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-2xl hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-2xl font-bold shadow-lg"
+                        title={description}
+                      >
+                        {flag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* 지구본 조작 */}
+                <div>
+                  <div className="text-white font-medium text-base mb-3 flex items-center gap-2">
+                    <span className="text-lg">🎮</span>
+                    <span>지구본 조작</span>
+                  </div>
+                  <div className="space-y-3">
+                    <button 
+                      onClick={resetView}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-2xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-lg flex items-center justify-center gap-3"
+                    >
+                      <span className="text-xl">🏠</span>
+                      <span>홈</span>
+                    </button>
+                    <button 
+                      onClick={toggleRotation}
+                      className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-2xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-lg flex items-center justify-center gap-3"
+                    >
+                      <span className="text-xl">🔄</span>
+                      <span>회전</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
         <div className="absolute bottom-6 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10">
           <div className="flex gap-6">
             {/* 빠른 이동 - 대륙별 */}
@@ -937,9 +1137,6 @@ const UltraRealisticGlobe = () => {
                             altitude: 2.0 
                           }, 1500);
                         }
-                      }
-                      if (isMobile) {
-                        setShowGlobeControlsOnMobile(false); // Hide controls after continent selection on mobile
                       }
                     }}
                     className="p-2 bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-sm font-bold min-h-[44px] min-w-[44px]"
@@ -1055,6 +1252,65 @@ const UltraRealisticGlobe = () => {
                     endDate: ''
                   });
                 }}
+                className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 여행지 수정 모달 */}
+      {editingTrip && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4">
+            <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 수정</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-slate-300 text-sm block mb-2">방문 도시</label>
+                <input
+                  type="text"
+                  value={editingTrip.cities.join(', ')}
+                  onChange={(e) => setEditingTrip({...editingTrip, cities: e.target.value.split(',').map(c => c.trim())})}
+                  placeholder="예: Seoul, Busan, Jeju"
+                  className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-300 text-sm block mb-2">시작일</label>
+                  <input
+                    type="date"
+                    value={editingTrip.startDate}
+                    onChange={(e) => setEditingTrip({...editingTrip, startDate: e.target.value})}
+                    className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-slate-300 text-sm block mb-2">종료일</label>
+                  <input
+                    type="date"
+                    value={editingTrip.endDate}
+                    onChange={(e) => setEditingTrip({...editingTrip, endDate: e.target.value})}
+                    className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={updateTravelDestination}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              >
+                수정
+              </button>
+              <button
+                onClick={() => setEditingTrip(null)}
                 className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
               >
                 취소

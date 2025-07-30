@@ -17,6 +17,7 @@ const TravelGlobe = () => {
   const [isAnimating, setIsAnimating] = useState(true);
   const [showCountries, setShowCountries] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedLine, setSelectedLine] = useState(null);
   const [showUsageGuide, setShowUsageGuide] = useState(false);
   const [showAddCountry, setShowAddCountry] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -289,45 +290,49 @@ const TravelGlobe = () => {
       const countryInfo = countryDatabase[country];
       if (!countryInfo) return;
       
-      const position = latLngToVector3(countryInfo.coords[0], countryInfo.coords[1], 2.16);
-      
-      const geometry = new THREE.SphereGeometry(0.08, 16, 16);
+      const position = latLngToVector3(countryInfo.coords[0], countryInfo.coords[1], 2);
       const visits = data.trips.length;
       const color = visitColors[Math.min(visits, 5)];
-      
-      const material = new THREE.MeshPhongMaterial({
+
+      // 핀 모양 지오메트리 생성
+      const pinHeight = 0.15 + (visits * 0.02);
+      const pinHeadRadius = 0.04;
+      const pinBodyRadius = 0.02;
+
+      const pinGroup = new THREE.Group();
+
+      // 핀 머리 (구)
+      const headGeometry = new THREE.SphereGeometry(pinHeadRadius, 16, 16);
+      const headMaterial = new THREE.MeshPhongMaterial({
         color: color,
         emissive: color,
-        emissiveIntensity: 0.4,
-        transparent: true,
-        opacity: 0.9,
+        emissiveIntensity: 0.5,
         shininess: 100
       });
-      
-      const marker = new THREE.Mesh(geometry, material);
-      marker.position.copy(position);
-      marker.userData = { country, data };
-      marker.castShadow = true;
-      
-      const scale = 2.5 + (visits * 0.5);
-      marker.scale.setScalar(scale);
-      
-      markerGroup.add(marker);
-      markers.push(marker);
-      
-      // 마커 주변 링 생성
-      const ringGeometry = new THREE.RingGeometry(0.12, 0.15, 16);
-      const ringMaterial = new THREE.MeshBasicMaterial({
+      const head = new THREE.Mesh(headGeometry, headMaterial);
+      head.position.y = pinHeight;
+      pinGroup.add(head);
+
+      // 핀 몸통 (원기둥)
+      const bodyGeometry = new THREE.CylinderGeometry(pinBodyRadius, pinBodyRadius * 0.5, pinHeight, 16);
+      const bodyMaterial = new THREE.MeshPhongMaterial({
         color: color,
-        transparent: true,
-        opacity: 0.6,
-        side: THREE.DoubleSide
+        opacity: 0.8,
+        transparent: true
       });
+      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+      body.position.y = pinHeight / 2;
+      pinGroup.add(body);
       
-      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-      ring.position.copy(position);
-      ring.lookAt(new THREE.Vector3(0, 0, 0));
-      markerGroup.add(ring);
+      pinGroup.position.copy(position);
+      pinGroup.lookAt(new THREE.Vector3(0,0,0));
+      pinGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), position.clone().normalize());
+
+      pinGroup.userData = { country, data, isPin: true };
+      pinGroup.castShadow = true;
+      
+      markerGroup.add(pinGroup);
+      markers.push(pinGroup);
       
       // 국가 라벨 생성
       const label = createLabel(country, position, color);
@@ -340,27 +345,92 @@ const TravelGlobe = () => {
     return markerGroup;
   }, [latLngToVector3, createLabel, userTravelData, countryDatabase, visitColors]);
 
-  // 마커 업데이트 함수
-  const updateMarkers = useCallback(() => {
+  // 여행 경로 라인 생성
+  const createTravelLines = useCallback(() => {
+    const linesGroup = new THREE.Group();
+    if (Object.keys(userTravelData).length < 2) return linesGroup;
+
+    const visitedCountries = Object.keys(userTravelData).sort((a, b) => {
+      const aDate = new Date(userTravelData[a].trips[0].dates.split(' - ')[0]);
+      const bDate = new Date(userTravelData[b].trips[0].dates.split(' - ')[0]);
+      return aDate - bDate;
+    });
+
+    for (let i = 0; i < visitedCountries.length - 1; i++) {
+      const startCountry = visitedCountries[i];
+      const endCountry = visitedCountries[i+1];
+
+      const startInfo = countryDatabase[startCountry];
+      const endInfo = countryDatabase[endCountry];
+
+      if (startInfo && endInfo) {
+        const startPos = latLngToVector3(startInfo.coords[0], startInfo.coords[1], 2);
+        const endPos = latLngToVector3(endInfo.coords[0], endInfo.coords[1], 2);
+
+        const arc = createGreatCircleArc(startPos, endPos);
+        const geometry = new THREE.BufferGeometry().setFromPoints(arc);
+        
+        const material = new THREE.LineBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.7,
+          linewidth: 2
+        });
+
+        const line = new THREE.Line(geometry, material);
+        line.userData = {
+          type: 'travel-line',
+          from: startCountry,
+          to: endCountry,
+          dates: `${userTravelData[startCountry].trips[0].dates} -> ${userTravelData[endCountry].trips[0].dates}`
+        };
+        linesGroup.add(line);
+      }
+    }
+    return linesGroup;
+  }, [userTravelData, countryDatabase, latLngToVector3]);
+
+  // Great Circle Arc 생성 함수
+  const createGreatCircleArc = (start, end) => {
+    const points = [];
+    for (let i = 0; i <= 100; i++) {
+      const p = new THREE.Vector3().lerpVectors(start, end, i / 100);
+      p.normalize();
+      p.multiplyScalar(2 + 0.1 * Math.sin(Math.PI * i / 100));
+      points.push(p);
+    }
+    return points;
+  };
+
+  // 마커 및 라인 업데이트 함수
+  const updateGlobeData = useCallback(() => {
     if (!globeGroupRef.current) return;
     
-    // 기존 마커 그룹 제거
+    // 기존 마커 및 라인 그룹 제거
     const existingMarkers = globeGroupRef.current.children.filter(child => 
-      child.userData && child.userData.isMarkerGroup
+      child.userData && (child.userData.isMarkerGroup || child.userData.isLineGroup)
     );
     existingMarkers.forEach(group => globeGroupRef.current.remove(group));
     
     // 새 마커 그룹 추가
     const newMarkerGroup = createMarkers();
+    newMarkerGroup.userData.isMarkerGroup = true;
     globeGroupRef.current.add(newMarkerGroup);
-  }, [createMarkers]);
 
-  // userTravelData가 변경될 때마다 마커 업데이트
+    // 새 라인 그룹 추가
+    const newLinesGroup = createTravelLines();
+    newLinesGroup.userData.isLineGroup = true;
+    globeGroupRef.current.add(newLinesGroup);
+
+  }, [createMarkers, createTravelLines]);
+
+  // userTravelData가 변경될 때마다 마커와 라인 업데이트
   useEffect(() => {
+    useEffect(() => {
     if (globeGroupRef.current && Object.keys(userTravelData).length > 0) {
-      updateMarkers();
+      updateGlobeData();
     }
-  }, [userTravelData, updateMarkers]);
+  }, [userTravelData, updateGlobeData]);
 
   // 별 배경 생성
   const createStarField = useCallback(() => {
@@ -495,16 +565,24 @@ const TravelGlobe = () => {
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(mouse, cameraRef.current);
       
-      const intersects = raycaster.intersectObjects(markersRef.current);
-      
-      if (intersects.length > 0) {
-        const marker = intersects[0].object;
+      const intersects = raycaster.intersectObjects(globeGroupRef.current.children, true);
+
+      const lineIntersect = intersects.find(i => i.object.userData.type === 'travel-line');
+      const markerIntersect = intersects.find(i => i.object.parent.userData.isPin);
+
+      if (lineIntersect) {
+        setSelectedLine(lineIntersect.object.userData);
+        setSelectedCountry(null);
+      } else if (markerIntersect) {
+        const marker = markerIntersect.object.parent;
         setSelectedCountry({
           name: marker.userData.country,
           data: marker.userData.data
         });
+        setSelectedLine(null);
       } else {
         setSelectedCountry(null);
+        setSelectedLine(null);
       }
     };
     
@@ -1031,6 +1109,26 @@ const TravelGlobe = () => {
                 <div className="text-slate-600 text-sm">📅 {trip.dates}</div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Travel Line Info Panel */}
+      {selectedLine && (
+        <div className={`absolute bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-5 border border-white/20 z-10 animate-in slide-in-from-bottom duration-300 ${
+          isMobile 
+            ? 'bottom-5 left-5 right-5' 
+            : 'bottom-20 left-1/2 transform -translate-x-1/2'
+        }`}>
+           <button 
+            onClick={() => setSelectedLine(null)}
+            className="absolute top-3 right-4 text-slate-400 hover:text-red-500 text-2xl transition-colors"
+          >
+            ×
+          </button>
+          <div className="text-center">
+            <div className="font-bold text-slate-800 text-base">{selectedLine.from} → {selectedLine.to}</div>
+            <div className="text-slate-600 text-sm">{selectedLine.dates}</div>
           </div>
         </div>
       )}
