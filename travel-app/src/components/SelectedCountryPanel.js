@@ -6,7 +6,8 @@ const SelectedCountryPanel = ({
   setSelectedCountry, 
   setShowGlobeControlsOnMobile,
   deleteCityTrip,
-  setEditingTrip
+  setEditingTrip,
+  editingTrip  // editingTrip prop 추가
 }) => {
   const isMobile = window.innerWidth <= 768;
   const panelRef = useRef(null);
@@ -14,6 +15,9 @@ const SelectedCountryPanel = ({
   // 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // 수정 중일 때는 패널이 닫히지 않도록 함
+      if (editingTrip) return;
+      
       if (panelRef.current && !panelRef.current.contains(event.target)) {
         setSelectedCountry(null);
         if (isMobile) {
@@ -28,7 +32,7 @@ const SelectedCountryPanel = ({
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [selectedCountry, setSelectedCountry, setShowGlobeControlsOnMobile, isMobile]);
+  }, [selectedCountry, setSelectedCountry, setShowGlobeControlsOnMobile, isMobile, editingTrip]);
 
   if (!selectedCountry) return null;
 
@@ -41,12 +45,20 @@ const SelectedCountryPanel = ({
     >
       <button 
         onClick={() => {
+          // 수정 중일 때는 X 버튼도 작동하지 않도록 함
+          if (editingTrip) return;
+          
           setSelectedCountry(null);
           if (isMobile) {
             setShowGlobeControlsOnMobile(true);
           }
         }}
-        className="absolute top-4 right-4 text-slate-400 hover:text-red-400 text-2xl transition-colors"
+        className={`absolute top-4 right-4 text-2xl transition-colors ${
+          editingTrip 
+            ? 'text-slate-600 cursor-not-allowed' 
+            : 'text-slate-400 hover:text-red-400 cursor-pointer'
+        }`}
+        disabled={editingTrip}
       >
         ×
       </button>
@@ -78,11 +90,13 @@ const SelectedCountryPanel = ({
                   city={city} 
                   cityTrips={cityTrips} 
                   onDeleteCityTrip={deleteCityTrip}
-                  onEditTrip={(trip) => setEditingTrip({ 
+                  country={selectedCountry.country}
+                  onEditTrip={(trip, country) => setEditingTrip({ 
                     ...trip, 
                     originalStartDate: trip.startDate, 
                     originalEndDate: trip.endDate, 
-                    originalCities: trip.cities 
+                    originalCities: trip.cities,
+                    country: country
                   })}
                 />
               );

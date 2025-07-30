@@ -149,7 +149,13 @@ const UltraRealisticGlobe = () => {
 
     setUserTravelData(prev => {
       const newData = { ...prev };
-      const countryEnglishName = selectedCountry.country;
+      const countryEnglishName = editingTrip.country || selectedCountry?.country;
+      
+      if (!countryEnglishName) {
+        console.error('국가 정보를 찾을 수 없습니다.');
+        return prev;
+      }
+      
       const countryDataToUpdate = newData[countryEnglishName];
 
       if (countryDataToUpdate) {
@@ -179,12 +185,16 @@ const UltraRealisticGlobe = () => {
           };
 
           const style = getVisitStyle(updatedTrips.length);
-          setSelectedCountry({
-            ...newData[countryEnglishName],
-            country: countryEnglishName,
-            displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
-            color: style.color
-          });
+          
+          // selectedCountry가 존재하고 해당 국가를 선택한 상태일 때만 업데이트
+          if (selectedCountry && selectedCountry.country === countryEnglishName) {
+            setSelectedCountry({
+              ...newData[countryEnglishName],
+              country: countryEnglishName,
+              displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
+              color: style.color
+            });
+          }
         }
       }
       return newData;
@@ -501,7 +511,22 @@ const UltraRealisticGlobe = () => {
         containerRef.current.innerHTML = '';
       }
     };
-  }, [globeMode, userTravelData]);
+  }, [globeMode]); // userTravelData를 dependency에서 제거하여 로딩 화면 방지
+
+  // userTravelData가 변경되면 지구본 데이터만 업데이트 (로딩 화면 없이)
+  useEffect(() => {
+    if (!globeRef.current) return;
+    
+    const globe = globeRef.current;
+    
+    // 포인트 데이터 업데이트
+    const travelPoints = createTravelPoints();
+    globe.pointsData(travelPoints);
+    
+    // 경로 데이터 업데이트
+    const routes = createTravelRoutes();
+    globe.arcsData(routes);
+  }, [userTravelData]);
 
   // 컨트롤 함수들
   const goToCountry = (countryEnglishName) => {
@@ -601,6 +626,7 @@ const UltraRealisticGlobe = () => {
         setShowGlobeControlsOnMobile={setShowGlobeControlsOnMobile}
         deleteCityTrip={deleteCityTrip}
         setEditingTrip={setEditingTrip}
+        editingTrip={editingTrip}
       />
 
       {selectedLine && (
@@ -638,22 +664,24 @@ const UltraRealisticGlobe = () => {
         setShowDateErrorModal={setShowDateErrorModal}
       />
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(51, 65, 85, 0.5);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(100, 116, 139, 0.8);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.8);
-        }
-      `}</style>
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.8);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8);
+          }
+        `}
+      </style>
     </div>
   );
 };

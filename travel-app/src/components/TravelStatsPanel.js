@@ -120,7 +120,7 @@ const TravelStatsPanel = ({
                         color: style.color
                       }); 
                       setSelectedLine(null);
-                      setShowMobileStats(false);
+                      // setShowMobileStats(false); // 이 줄을 제거하여 패널이 닫히지 않도록 함
                       if (isMobile) {
                         setShowGlobeControlsOnMobile(false);
                       }

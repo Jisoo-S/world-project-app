@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip }) => {
+const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip, country }) => {
   const [showDates, setShowDates] = useState(false);
 
   // 여행 기간을 시작일 기준으로 오름차순 정렬
@@ -23,7 +23,7 @@ const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip }) => {
               <span>{trip.startDate} ~ {trip.endDate}</span>
               <div className="flex gap-1">
                 <button
-                  onClick={() => onEditTrip(trip)}
+                  onClick={() => onEditTrip(trip, country)}
                   className="text-blue-400 hover:text-blue-600"
                   title="이 여행 수정"
                 >
