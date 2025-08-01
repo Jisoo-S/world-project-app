@@ -6,6 +6,8 @@ import TravelStatsPanel from './components/TravelStatsPanel';
 import GlobeControls from './components/GlobeControls';
 import SelectedCountryPanel from './components/SelectedCountryPanel';
 import { AddTravelModal, EditTravelModal, DateErrorModal } from './components/Modals';
+import AuthModal from './components/AuthModal';
+import { supabase } from './supabaseClient';
 
 const UltraRealisticGlobe = () => {
   const globeRef = useRef();
@@ -31,6 +33,11 @@ const UltraRealisticGlobe = () => {
   const [showContinentPanel, setShowContinentPanel] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
   const lineInfoRef = useRef(null);
+  
+  // 인증 관련 상태
+  const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [homeCountry, setHomeCountry] = useState('South Korea');
 
   // 여행 경로 정보 패널 외부 클릭 감지
   useEffect(() => {
@@ -47,6 +54,182 @@ const UltraRealisticGlobe = () => {
       };
     }
   }, [selectedLine]);
+
+  // 사용자 세션 확인 및 데이터 로드
+  useEffect(() => {
+    // 현재 세션 확인
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        loadUserData(session.user.id);
+      }
+    });
+
+    // 세션 변경 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        loadUserData(session.user.id);
+      } else {
+        setUser(null);
+        // 로그아웃 시 데이터 초기화
+        setUserTravelData({});
+        setHomeCountry('South Korea');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 사용자 데이터 로드
+  const loadUserData = async (userId) => {
+    try {
+      // 사용자 프로필 로드
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('home_country')
+        .eq('id', userId)
+        .single();
+
+      if (profile && !profileError) {
+        setHomeCountry(profile.home_country || 'South Korea');
+      }
+
+      // 사용자 여행 데이터 로드
+      const { data: travels, error: travelsError } = await supabase
+        .from('user_travels')
+        .select('*')
+        .eq('user_id', userId)
+        .order('start_date', { ascending: true });
+
+      if (travels && !travelsError) {
+        const travelData = {};
+        travels.forEach(travel => {
+          const countryEnglishName = travel.country;
+          if (!travelData[countryEnglishName]) {
+            travelData[countryEnglishName] = {
+              visits: 0,
+              lastVisit: '',
+              cities: [],
+              coordinates: countryData[countryEnglishName]?.coords || [0, 0],
+              description: '아름다운 여행지',
+              trips: []
+            };
+          }
+          
+          travelData[countryEnglishName].trips.push({
+            cities: travel.cities,
+            startDate: travel.start_date,
+            endDate: travel.end_date
+          });
+          
+          travelData[countryEnglishName].visits++;
+          travelData[countryEnglishName].cities = [...new Set([...travelData[countryEnglishName].cities, ...travel.cities])];
+          
+          if (new Date(travel.end_date) > new Date(travelData[countryEnglishName].lastVisit || '1900-01-01')) {
+            travelData[countryEnglishName].lastVisit = travel.end_date;
+          }
+        });
+        
+        setUserTravelData(travelData);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  // 데이터 저장 함수
+  const saveToSupabase = async (countryEnglishName, tripData) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_travels')
+        .insert([{
+          user_id: user.id,
+          country: countryEnglishName,
+          cities: tripData.cities,
+          start_date: tripData.startDate,
+          end_date: tripData.endDate
+        }]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+      alert('데이터 저장에 실패했습니다.');
+    }
+  };
+
+  // 데이터 업데이트 함수
+  const updateInSupabase = async (countryEnglishName, oldTrip, newTrip) => {
+    if (!user) return;
+
+    try {
+      // 먼저 기존 데이터 찾기
+      const { data: existingData, error: selectError } = await supabase
+        .from('user_travels')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('country', countryEnglishName)
+        .eq('start_date', oldTrip.startDate)
+        .eq('end_date', oldTrip.endDate)
+        .single();
+
+      if (selectError) throw selectError;
+
+      if (existingData) {
+        const { error: updateError } = await supabase
+          .from('user_travels')
+          .update({
+            cities: newTrip.cities,
+            start_date: newTrip.startDate,
+            end_date: newTrip.endDate
+          })
+          .eq('id', existingData.id);
+
+        if (updateError) throw updateError;
+      }
+    } catch (error) {
+      console.error('Error updating in Supabase:', error);
+      alert('데이터 업데이트에 실패했습니다.');
+    }
+  };
+
+  // 데이터 삭제 함수
+  const deleteFromSupabase = async (countryEnglishName, trip) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_travels')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('country', countryEnglishName)
+        .eq('start_date', trip.startDate)
+        .eq('end_date', trip.endDate);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting from Supabase:', error);
+      alert('데이터 삭제에 실패했습니다.');
+    }
+  };
+
+  // 로그인 성공 핸들러
+  const handleAuthSuccess = (authUser) => {
+    setUser(authUser);
+    loadUserData(authUser.id);
+  };
+
+  // 로그아웃
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    // 로그아웃 시 여행 데이터 초기화
+    setUserTravelData({});
+    // 홈 국가도 기본값으로 초기화
+    setHomeCountry('South Korea');
+  };
 
   // 사용자 여행 포인트 생성
   const createTravelPoints = () => {
@@ -87,14 +270,16 @@ const UltraRealisticGlobe = () => {
     allTripsFlat.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
     const routes = [];
-    const koreaCoords = countryData['South Korea']?.coords;
+    // 로그인한 사용자는 홈 국가, 비로그인 사용자는 South Korea를 기본으로 사용
+    const defaultCountry = user ? homeCountry : 'South Korea';
+    const defaultCoords = countryData[defaultCountry]?.coords;
 
-    if (!koreaCoords) {
-      console.error("South Korea coordinates not found in countryData.");
+    if (!defaultCoords) {
+      console.error(`${defaultCountry} coordinates not found in countryData.`);
       return routes;
     }
 
-    let previousCoords = koreaCoords;
+    let previousCoords = defaultCoords;
     let previousEndDate = null;
 
     allTripsFlat.forEach((currentTrip) => {
@@ -102,15 +287,15 @@ const UltraRealisticGlobe = () => {
       const previousTripEndDate = previousEndDate ? new Date(previousEndDate) : null;
 
       let startPointCoords;
-      let startCountryName = 'South Korea';
+      let startCountryName = defaultCountry;
       
       if (previousTripEndDate && (currentTripStartDate - previousTripEndDate) / (1000 * 60 * 60 * 24) > 1) {
-        startPointCoords = koreaCoords;
-        startCountryName = 'South Korea';
+        startPointCoords = defaultCoords;
+        startCountryName = defaultCountry;
       } else {
         startPointCoords = previousCoords;
         const prevCountry = allTripsFlat[allTripsFlat.indexOf(currentTrip) - 1];
-        startCountryName = prevCountry ? prevCountry.country : 'South Korea';
+        startCountryName = prevCountry ? prevCountry.country : defaultCountry;
       }
 
       if (startPointCoords[0] !== currentTrip.coords[0] || startPointCoords[1] !== currentTrip.coords[1]) {
@@ -136,7 +321,7 @@ const UltraRealisticGlobe = () => {
   };
 
   // 여행지 수정 함수
-  const updateTravelDestination = () => {
+  const updateTravelDestination = async () => {
     if (!editingTrip) return;
 
     const startDateObj = new Date(editingTrip.startDate);
@@ -147,15 +332,15 @@ const UltraRealisticGlobe = () => {
       return;
     }
 
+    const countryEnglishName = editingTrip.country || selectedCountry?.country;
+    
+    if (!countryEnglishName) {
+      console.error('국가 정보를 찾을 수 없습니다.');
+      return;
+    }
+
     setUserTravelData(prev => {
       const newData = { ...prev };
-      const countryEnglishName = editingTrip.country || selectedCountry?.country;
-      
-      if (!countryEnglishName) {
-        console.error('국가 정보를 찾을 수 없습니다.');
-        return prev;
-      }
-      
       const countryDataToUpdate = newData[countryEnglishName];
 
       if (countryDataToUpdate) {
@@ -200,11 +385,21 @@ const UltraRealisticGlobe = () => {
       return newData;
     });
 
+    // Supabase에 업데이트
+    await updateInSupabase(countryEnglishName, {
+      startDate: editingTrip.originalStartDate,
+      endDate: editingTrip.originalEndDate
+    }, {
+      cities: editingTrip.cities,
+      startDate: editingTrip.startDate,
+      endDate: editingTrip.endDate
+    });
+
     setEditingTrip(null);
   };
 
   // 여행지 추가 함수
-  const addTravelDestination = () => {
+  const addTravelDestination = async () => {
     if (!newTravelData.country || !newTravelData.cities || !newTravelData.startDate || !newTravelData.endDate) {
       alert('모든 필드를 입력해주세요.');
       return;
@@ -264,6 +459,9 @@ const UltraRealisticGlobe = () => {
       }));
     }
 
+    // Supabase에 저장
+    await saveToSupabase(newTravelData.country, newTrip);
+
     setNewTravelData({
       country: '',
       cities: '',
@@ -274,7 +472,7 @@ const UltraRealisticGlobe = () => {
   };
 
   // 여행지 (도시별 여행) 삭제 함수
-  const deleteCityTrip = (cityName, tripToDelete) => {
+  const deleteCityTrip = async (cityName, tripToDelete) => {
     setUserTravelData(prev => {
       const newData = { ...prev };
       const countryEnglishName = selectedCountry.country;
@@ -321,6 +519,9 @@ const UltraRealisticGlobe = () => {
       }
       return newData;
     });
+
+    // Supabase에서 삭제
+    await deleteFromSupabase(selectedCountry.country, tripToDelete);
   };
 
   useEffect(() => {
@@ -332,7 +533,7 @@ const UltraRealisticGlobe = () => {
     const initGlobe = async () => {
       try {
         setIsLoading(true);
-        setLoadingStatus('로딩 중...');
+        setLoadingStatus('Loading...');
 
         if (containerRef.current) {
           containerRef.current.innerHTML = '';
@@ -460,7 +661,7 @@ const UltraRealisticGlobe = () => {
 
           globeRef.current = globeInstance;
           
-          setLoadingStatus('로딩 중...');
+          setLoadingStatus('Loading...');
           
           setTimeout(() => {
             if (mounted) {
@@ -513,7 +714,7 @@ const UltraRealisticGlobe = () => {
     };
   }, [globeMode]); // userTravelData를 dependency에서 제거하여 로딩 화면 방지
 
-  // userTravelData가 변경되면 지구본 데이터만 업데이트 (로딩 화면 없이)
+  // userTravelData, user, homeCountry가 변경되면 지구본 데이터만 업데이트 (로딩 화면 없이)
   useEffect(() => {
     if (!globeRef.current) return;
     
@@ -526,7 +727,7 @@ const UltraRealisticGlobe = () => {
     // 경로 데이터 업데이트
     const routes = createTravelRoutes();
     globe.arcsData(routes);
-  }, [userTravelData]);
+  }, [userTravelData, user, homeCountry]);
 
   // 컨트롤 함수들
   const goToCountry = (countryEnglishName) => {
@@ -542,15 +743,15 @@ const UltraRealisticGlobe = () => {
 
   const resetView = () => {
     if (globeRef.current) {
-      const koreaCoords = countryData['South Korea']?.coords;
-      if (koreaCoords) {
+      const homeCoords = countryData[homeCountry]?.coords;
+      if (homeCoords) {
         globeRef.current.pointOfView({ 
-          lat: koreaCoords[0], 
-          lng: koreaCoords[1], 
+          lat: homeCoords[0], 
+          lng: homeCoords[1], 
           altitude: 1.5 
         }, 1500);
       } else {
-        // 대한민국 좌표를 찾을 수 없는 경우 기본 뷰로
+        // 홈 국가 좌표를 찾을 수 없는 경우 기본 뷰로
         globeRef.current.pointOfView({ 
           lat: 20, 
           lng: 0, 
@@ -592,6 +793,47 @@ const UltraRealisticGlobe = () => {
       <div ref={containerRef} className="w-full h-full" />
 
       <LoadingScreen isLoading={isLoading} loadingStatus={loadingStatus} />
+
+      {/* 로그인 버튼 및 사용자 정보 */}
+      {window.innerWidth <= 768 ? (
+        // 모바일: 왼쪽 하단에 표시
+        <div className="absolute bottom-6 left-6 z-10">
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+      ) : (
+        // 데스크톱: 오른쪽 상단에 표시
+        <div className="absolute top-6 right-20 z-10">
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+      )}
 
       <GlobeControls 
         globeMode={globeMode}
@@ -662,6 +904,12 @@ const UltraRealisticGlobe = () => {
       <DateErrorModal 
         showDateErrorModal={showDateErrorModal}
         setShowDateErrorModal={setShowDateErrorModal}
+      />
+
+      <AuthModal 
+        showAuth={showAuth}
+        setShowAuth={setShowAuth}
+        onAuthSuccess={handleAuthSuccess}
       />
 
       <style>

@@ -1,70 +1,130 @@
-# Getting Started with Create React App
+# World Travel Tracker 🌍
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+인터랙티브한 3D 지구본으로 여행 기록을 시각화하는 React 애플리케이션입니다.
 
-## Available Scripts
+## 기능
 
-In the project directory, you can run:
+- 🌐 인터랙티브 3D 지구본
+- ✈️ 여행 경로 시각화
+- 📍 방문 국가 및 도시 관리
+- 🎨 다양한 지구본 모드 (위성, 야간, 지형)
+- 📊 여행 통계
+- 🔐 Supabase를 통한 사용자 인증 및 데이터 저장
 
-### `npm start`
+## 설치 및 실행
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 1. 의존성 설치
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+cd travel-app
+npm install
+npm install @supabase/supabase-js
+```
 
-### `npm test`
+### 2. Supabase 설정
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. [Supabase](https://supabase.com)에서 새 프로젝트 생성
+2. `src/supabaseClient.js` 파일에서 다음 값을 업데이트:
+   ```javascript
+   const supabaseUrl = 'YOUR_SUPABASE_PROJECT_URL'
+   const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'
+   ```
 
-### `npm run build`
+3. Supabase SQL Editor에서 다음 테이블 생성:
+   ```sql
+   -- 사용자 프로필 테이블
+   CREATE TABLE user_profiles (
+     id UUID REFERENCES auth.users(id) PRIMARY KEY,
+     email TEXT UNIQUE NOT NULL,
+     home_country TEXT,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+   );
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+   -- 사용자 여행 데이터 테이블
+   CREATE TABLE user_travels (
+     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+     country TEXT NOT NULL,
+     cities TEXT[] NOT NULL,
+     start_date DATE NOT NULL,
+     end_date DATE NOT NULL,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+   );
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+   -- RLS (Row Level Security) 활성화
+   ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE user_travels ENABLE ROW LEVEL SECURITY;
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+   -- RLS 정책 생성
+   -- user_profiles 테이블 정책
+   CREATE POLICY "Users can view own profile" 
+   ON user_profiles FOR SELECT 
+   USING (auth.uid() = id);
 
-### `npm run eject`
+   CREATE POLICY "Users can insert own profile" 
+   ON user_profiles FOR INSERT 
+   WITH CHECK (auth.uid() = id);
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+   CREATE POLICY "Users can update own profile" 
+   ON user_profiles FOR UPDATE 
+   USING (auth.uid() = id);
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+   -- user_travels 테이블 정책
+   CREATE POLICY "Users can view own travels" 
+   ON user_travels FOR SELECT 
+   USING (auth.uid() = user_id);
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+   CREATE POLICY "Users can insert own travels" 
+   ON user_travels FOR INSERT 
+   WITH CHECK (auth.uid() = user_id);
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+   CREATE POLICY "Users can update own travels" 
+   ON user_travels FOR UPDATE 
+   USING (auth.uid() = user_id);
 
-## Learn More
+   CREATE POLICY "Users can delete own travels" 
+   ON user_travels FOR DELETE 
+   USING (auth.uid() = user_id);
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 3. 애플리케이션 실행
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+npm start
+```
 
-### Code Splitting
+애플리케이션이 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 사용 방법
 
-### Analyzing the Bundle Size
+1. **로그인 없이 사용**: 즉시 여행 기록을 추가하고 시각화할 수 있습니다 (데이터는 브라우저에만 저장)
+2. **로그인하여 사용**: 
+   - 오른쪽 상단의 "Sign In" 버튼 클릭
+   - 회원가입 시 홈 국가 선택 (홈 버튼의 기본 위치가 됩니다)
+   - 로그인 후 모든 여행 데이터가 클라우드에 저장됩니다
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 주요 기능
 
-### Making a Progressive Web App
+- **여행지 추가**: 🌍 버튼을 클릭하여 새로운 여행지 추가
+- **대륙별 이동**: AS, EU, NA, SA, AF, AU 버튼으로 빠른 이동
+- **지구본 모드 변경**: 위성, 야간, 지형 모드 선택
+- **홈 버튼**: 설정된 홈 국가로 이동 (로그인 시 사용자 설정 국가)
+- **회전 토글**: 지구본 자동 회전 켜기/끄기
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 기술 스택
 
-### Advanced Configuration
+- React 18
+- Globe.gl (3D 지구본 렌더링)
+- Tailwind CSS (스타일링)
+- Supabase (인증 및 데이터베이스)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 배포
 
-### Deployment
+Vercel을 통한 배포가 설정되어 있습니다:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+npm run build
+```
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+빌드 후 `build` 폴더의 내용을 배포하면 됩니다.

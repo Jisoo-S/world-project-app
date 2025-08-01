@@ -70,7 +70,7 @@ const GlobeControls = ({
   return (
     <>
       {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute top-6 ${isMobile ? 'left-1' : 'left-6'} flex gap-3 z-10`}>
+      <div className={`absolute top-6 ${isMobile ? 'left-2' : 'left-6'} flex gap-3 z-10`}>
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isMobile 
@@ -79,7 +79,7 @@ const GlobeControls = ({
         }`}>
           <div className={`text-white font-medium mb-2 ${
             isMobile ? 'text-xs' : 'text-sm font-bold mb-3'
-          }`}>🛰️ 모드</div>
+          }`}>⚙️ 모드</div>
           <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
             <button
               onClick={() => changeGlobeMode('satellite')}
@@ -93,7 +93,7 @@ const GlobeControls = ({
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
-              위성 🛰️
+              🛰️ 위성 
             </button>
             <button
               onClick={() => changeGlobeMode('night')}
@@ -107,7 +107,7 @@ const GlobeControls = ({
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
-              야간 🌙
+              🌙 야간 
             </button>
             <button
               onClick={() => changeGlobeMode('topographic')}
@@ -121,13 +121,13 @@ const GlobeControls = ({
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
-              지형 🗺️
+              🗺️ 지형 
             </button>
           </div>
         </div>
         
         {/* 줌 컨트롤 버튼 */}
-        <div className="bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 rounded-xl p-1 flex flex-row gap-1 items-center self-start">
+        <div className="bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 rounded-xl p-0.5 flex flex-row gap-1 items-center self-start">
           <button
             onClick={() => {
               const newZoom = Math.max(1.2, zoomLevel - 0.3);
@@ -235,7 +235,7 @@ const GlobeControls = ({
                   <button
                     key={continent}
                     onClick={() => handleContinentClick(continent, countries)}
-                    className="aspect-square bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-lg font-bold"
+                    className="w-[37px] h-[37px] bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-lg font-bold"
                     title={description}
                   >
                     {flag}

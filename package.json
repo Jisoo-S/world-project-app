@@ -4,7 +4,7 @@
   "description": "실제 대륙 모양을 표현하는 3D 여행 지구본 - Globe.gl 기반",
   "keywords": [
     "react",
-    "globe.gl", 
+    "globe.gl",
     "three.js",
     "3d",
     "earth",
@@ -26,6 +26,7 @@
   },
   "private": true,
   "dependencies": {
+    "@supabase/supabase-js": "^2.53.0",
     "@tailwindcss/forms": "^0.5.10",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.4",
