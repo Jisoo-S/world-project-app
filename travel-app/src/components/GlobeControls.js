@@ -130,10 +130,11 @@ const GlobeControls = ({
         <div className="bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 rounded-xl p-0.5 flex flex-row gap-1 items-center self-start">
           <button
             onClick={() => {
-              const newZoom = Math.max(1.2, zoomLevel - 0.3);
-              setZoomLevel(newZoom);
               if (globeRef.current) {
                 const currentPov = globeRef.current.pointOfView();
+                const currentAltitude = currentPov.altitude || zoomLevel;
+                const newZoom = Math.max(1.2, currentAltitude - 0.3);
+                setZoomLevel(newZoom);
                 globeRef.current.pointOfView({ 
                   lat: currentPov.lat, 
                   lng: currentPov.lng, 
@@ -147,10 +148,11 @@ const GlobeControls = ({
           </button>
           <button
             onClick={() => {
-              const newZoom = Math.min(4.0, zoomLevel + 0.3);
-              setZoomLevel(newZoom);
               if (globeRef.current) {
                 const currentPov = globeRef.current.pointOfView();
+                const currentAltitude = currentPov.altitude || zoomLevel;
+                const newZoom = Math.min(4.0, currentAltitude + 0.3);
+                setZoomLevel(newZoom);
                 globeRef.current.pointOfView({ 
                   lat: currentPov.lat, 
                   lng: currentPov.lng, 

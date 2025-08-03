@@ -7,15 +7,19 @@ import GlobeControls from './components/GlobeControls';
 import SelectedCountryPanel from './components/SelectedCountryPanel';
 import { AddTravelModal, EditTravelModal, DateErrorModal } from './components/Modals';
 import AuthModal from './components/AuthModal';
+import SettingsModal from './components/SettingsModal';
+import LineInfoPanel from './components/LineInfoPanel';
 import { supabase } from './supabaseClient';
 
 const UltraRealisticGlobe = () => {
   const globeRef = useRef();
   const containerRef = useRef();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('로딩 중...');
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedLine, setSelectedLine] = useState(null);
+  const [selectedLineIndex, setSelectedLineIndex] = useState(0);
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
@@ -38,12 +42,14 @@ const UltraRealisticGlobe = () => {
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [homeCountry, setHomeCountry] = useState('South Korea');
+  const [showSettings, setShowSettings] = useState(false);
 
   // 여행 경로 정보 패널 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (lineInfoRef.current && !lineInfoRef.current.contains(event.target)) {
         setSelectedLine(null);
+        setSelectedLineIndex(0);
       }
     };
 
@@ -269,14 +275,15 @@ const UltraRealisticGlobe = () => {
 
     allTripsFlat.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-    const routes = [];
+    const routesMap = {}; // 같은 경로의 여행들을 그룹핑
+    
     // 로그인한 사용자는 홈 국가, 비로그인 사용자는 South Korea를 기본으로 사용
     const defaultCountry = user ? homeCountry : 'South Korea';
     const defaultCoords = countryData[defaultCountry]?.coords;
 
     if (!defaultCoords) {
       console.error(`${defaultCountry} coordinates not found in countryData.`);
-      return routes;
+      return [];
     }
 
     let previousCoords = defaultCoords;
@@ -299,15 +306,24 @@ const UltraRealisticGlobe = () => {
       }
 
       if (startPointCoords[0] !== currentTrip.coords[0] || startPointCoords[1] !== currentTrip.coords[1]) {
-        routes.push({
-          startLat: startPointCoords[0],
-          startLng: startPointCoords[1],
-          endLat: currentTrip.coords[0],
-          endLng: currentTrip.coords[1],
-          color: '#60a5fa',
-          stroke: 2,
-          startCountry: startCountryName,
-          endCountry: currentTrip.country,
+        const routeKey = `${startCountryName}-${currentTrip.country}`;
+        
+        if (!routesMap[routeKey]) {
+          routesMap[routeKey] = {
+            startLat: startPointCoords[0],
+            startLng: startPointCoords[1],
+            endLat: currentTrip.coords[0],
+            endLng: currentTrip.coords[1],
+            color: '#60a5fa',
+            stroke: 2,
+            startCountry: startCountryName,
+            endCountry: currentTrip.country,
+            trips: []
+          };
+        }
+        
+        // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
+        routesMap[routeKey].trips.unshift({
           startDate: currentTrip.startDate,
           endDate: currentTrip.endDate
         });
@@ -315,6 +331,14 @@ const UltraRealisticGlobe = () => {
       
       previousCoords = currentTrip.coords;
       previousEndDate = currentTrip.endDate;
+    });
+
+    // routesMap을 routes 배열로 변환
+    const routes = [];
+    Object.values(routesMap).forEach(route => {
+      // trips 배열을 날짜 역순으로 정렬 (최신 여행이 첫 번째로)
+      route.trips.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+      routes.push(route);
     });
 
     return routes;
@@ -532,8 +556,10 @@ const UltraRealisticGlobe = () => {
 
     const initGlobe = async () => {
       try {
-        setIsLoading(true);
-        setLoadingStatus('Loading...');
+        if (!isInitialLoad) {
+          setIsLoading(true);
+          setLoadingStatus('Loading...');
+        }
 
         if (containerRef.current) {
           containerRef.current.innerHTML = '';
@@ -624,6 +650,7 @@ const UltraRealisticGlobe = () => {
           .onArcClick(arc => {
             setSelectedLine(arc);
             setSelectedCountry(null);
+            setSelectedLineIndex(0);
           });
 
         if (!mounted) return;
@@ -666,6 +693,7 @@ const UltraRealisticGlobe = () => {
           setTimeout(() => {
             if (mounted) {
               setIsLoading(false);
+              setIsInitialLoad(false);
             }
           }, 1000);
         }
@@ -677,6 +705,7 @@ const UltraRealisticGlobe = () => {
         setTimeout(() => {
           if (mounted) {
             setIsLoading(false);
+            setIsInitialLoad(false);
           }
         }, 2000);
       }
@@ -794,17 +823,25 @@ const UltraRealisticGlobe = () => {
 
       <LoadingScreen isLoading={isLoading} loadingStatus={loadingStatus} />
 
-      {/* 로그인 버튼 및 사용자 정보 */}
+      {/* 로그인 버튼 및 사용자 정보 + 설정 버튼 */}
       {window.innerWidth <= 768 ? (
-        // 모바일: 왼쪽 하단에 표시
-        <div className="absolute bottom-6 left-6 z-10">
+        // 모바일: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
+        <div className="absolute bottom-6 left-6 z-10 flex gap-2">
           {user ? (
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-            >
-              Sign Out
-            </button>
+            <>
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="bg-slate-900/95 backdrop-blur-lg rounded-lg shadow-2xl px-3 py-2 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
+              >
+                ⚙️
+              </button>
+            </>
           ) : (
             <button
               onClick={() => setShowAuth(true)}
@@ -815,24 +852,37 @@ const UltraRealisticGlobe = () => {
           )}
         </div>
       ) : (
-        // 데스크톱: 오른쪽 상단에 표시
-        <div className="absolute top-6 right-20 z-10">
-          {user ? (
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-            >
-              Sign Out
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowAuth(true)}
-              className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-            >
-              Sign In
-            </button>
+        // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
+        <>
+          <div className="absolute top-6 right-20 z-10">
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuth(true)}
+                className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+          {/* 데스크톱: 왼쪽 하단에 설정 버튼 */}
+          {user && (
+            <div className="absolute bottom-6 left-6 z-10">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl px-4 py-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all font-medium text-sm flex items-center gap-2"
+              >
+                ⚙️ 설정
+              </button>
+            </div>
           )}
-        </div>
+        </>
       )}
 
       <GlobeControls 
@@ -871,21 +921,13 @@ const UltraRealisticGlobe = () => {
         editingTrip={editingTrip}
       />
 
-      {selectedLine && (
-        <div 
-          ref={lineInfoRef}
-          className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 text-center"
-        >
-          <button 
-            onClick={() => setSelectedLine(null)}
-            className="absolute top-2 right-2 text-slate-400 hover:text-red-400 text-xl transition-colors"
-          >
-            ×
-          </button>
-          <div className="text-white font-bold text-md mb-1">{countryData[selectedLine.startCountry]?.koreanName || selectedLine.startCountry} → {countryData[selectedLine.endCountry]?.koreanName || selectedLine.endCountry}</div>
-          <div className="text-slate-400 text-sm">{selectedLine.startDate} ~ {selectedLine.endDate}</div>
-        </div>
-      )}
+      <LineInfoPanel
+        selectedLine={selectedLine}
+        setSelectedLine={setSelectedLine}
+        selectedLineIndex={selectedLineIndex}
+        setSelectedLineIndex={setSelectedLineIndex}
+        lineInfoRef={lineInfoRef}
+      />
 
       <AddTravelModal 
         showAddTravel={showAddTravel}
@@ -910,6 +952,14 @@ const UltraRealisticGlobe = () => {
         showAuth={showAuth}
         setShowAuth={setShowAuth}
         onAuthSuccess={handleAuthSuccess}
+      />
+
+      <SettingsModal
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        user={user}
+        homeCountry={homeCountry}
+        setHomeCountry={setHomeCountry}
       />
 
       <style>
