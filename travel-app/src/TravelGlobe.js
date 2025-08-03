@@ -117,6 +117,20 @@ const TravelGlobe = () => {
     return new THREE.Vector3(x, y, z);
   }, []);
 
+  // 두 지점 간의 거리 계산 함수 (Haversine formula)
+  const calculateDistance = useCallback((lat1, lon1, lat2, lon2) => {
+    const R = 6371; // 지구 반지름 (킬로미터)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  }, []);
+
   // 실제 지구 텍스처 생성
   const createUltraRealisticEarthTexture = useCallback(() => {
     setLoadingStatus('고품질 지구 텍스처 생성 중...');
@@ -367,7 +381,17 @@ const TravelGlobe = () => {
         const startPos = latLngToVector3(startInfo.coords[0], startInfo.coords[1], 2);
         const endPos = latLngToVector3(endInfo.coords[0], endInfo.coords[1], 2);
 
-        const arc = createGreatCircleArc(startPos, endPos);
+        // 두 국가 간의 거리 계산
+        const distance = calculateDistance(
+          startInfo.coords[0], startInfo.coords[1],
+          endInfo.coords[0], endInfo.coords[1]
+        );
+
+        // 거리에 따라 선의 최대 높이 조절 (예: 0km일 때 0, 10000km 이상일 때 0.5)
+        const maxLineHeight = Math.min(0.5, distance / 20000 * 0.5); // 20000km를 기준으로 최대 높이 0.5
+        console.log(`Distance between ${startCountry} and ${endCountry}: ${distance.toFixed(2)} km, Max Line Height: ${maxLineHeight.toFixed(4)}`);
+
+        const arc = createGreatCircleArc(startPos, endPos, maxLineHeight);
         const geometry = new THREE.BufferGeometry().setFromPoints(arc);
         
         const material = new THREE.LineBasicMaterial({
@@ -388,19 +412,19 @@ const TravelGlobe = () => {
       }
     }
     return linesGroup;
-  }, [userTravelData, countryDatabase, latLngToVector3]);
+  }, [userTravelData, countryDatabase, latLngToVector3, calculateDistance, createGreatCircleArc]);
 
   // Great Circle Arc 생성 함수
-  const createGreatCircleArc = (start, end) => {
+  const createGreatCircleArc = useCallback((start, end, maxHeight) => {
     const points = [];
     for (let i = 0; i <= 100; i++) {
       const p = new THREE.Vector3().lerpVectors(start, end, i / 100);
       p.normalize();
-      p.multiplyScalar(2 + 0.1 * Math.sin(Math.PI * i / 100));
+      p.multiplyScalar(2 + maxHeight * Math.sin(Math.PI * i / 100));
       points.push(p);
     }
     return points;
-  };
+  }, []);
 
   // 마커 및 라인 업데이트 함수
   const updateGlobeData = useCallback(() => {
@@ -1042,6 +1066,7 @@ const TravelGlobe = () => {
       )}
 
       {/* Zoom Controls - 아래로 이동 */}
+      {!selectedLine && (
       <div className={`absolute left-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 z-10 ${
         isMobile ? 'bottom-40' : 'bottom-20'
       }`}>
@@ -1058,8 +1083,10 @@ const TravelGlobe = () => {
           −
         </button>
       </div>
+      )}
 
       {/* Controls */}
+      {!selectedLine && (
       <div className="absolute bottom-5 right-5 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-5 border border-white/20 z-10">
         <div className="text-slate-800 font-bold text-base mb-3">🎮 지구본 조작</div>
         <div className="space-y-2">
@@ -1081,6 +1108,7 @@ const TravelGlobe = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Country Info Panel */}
       {selectedCountry && (

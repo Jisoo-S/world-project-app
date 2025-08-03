@@ -1,17 +1,19 @@
 import React, { useRef, useEffect } from 'react';
 
-const GlobeControls = ({ 
-  globeMode, 
-  changeGlobeMode, 
-  zoomLevel, 
-  setZoomLevel, 
+const GlobeControls = ({
+  globeMode,
+  changeGlobeMode,
+  zoomLevel,
+  setZoomLevel,
   globeRef,
   resetView,
   toggleRotation,
   goToCountry,
   userTravelData,
   showContinentPanel,
-  setShowContinentPanel
+  setShowContinentPanel,
+  selectedLine,
+  selectedCountry
 }) => {
   const isMobile = window.innerWidth <= 768;
   const continentPanelRef = useRef(null);
@@ -79,7 +81,7 @@ const GlobeControls = ({
         }`}>
           <div className={`text-white font-medium mb-2 ${
             isMobile ? 'text-xs' : 'text-sm font-bold mb-3'
-          }`}>⚙️ 모드</div>
+          }`}>👀 모드</div>
           <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
             <button
               onClick={() => changeGlobeMode('satellite')}
@@ -142,7 +144,9 @@ const GlobeControls = ({
                 }, 300);
               }
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg transition-all text-sm w-10 h-10 flex items-center justify-center"
+            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
+              isMobile ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm p-2'
+            }`}
           >
             +
           </button>
@@ -151,7 +155,7 @@ const GlobeControls = ({
               if (globeRef.current) {
                 const currentPov = globeRef.current.pointOfView();
                 const currentAltitude = currentPov.altitude || zoomLevel;
-                const newZoom = Math.min(4.0, currentAltitude + 0.3);
+                const newZoom = Math.min(8.0, currentAltitude + 0.3);  // 5.0에서 8.0으로 대폭 증가하여 훨씬 더 축소 가능
                 setZoomLevel(newZoom);
                 globeRef.current.pointOfView({ 
                   lat: currentPov.lat, 
@@ -160,7 +164,9 @@ const GlobeControls = ({
                 }, 300);
               }
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg transition-all text-sm w-10 h-10 flex items-center justify-center"
+            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
+              isMobile ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm p-2'
+            }`}
           >
             -
           </button>
@@ -169,63 +175,65 @@ const GlobeControls = ({
 
       {/* 컨트롤 패널 */}
       {isMobile ? (
-        <div className="absolute bottom-6 right-6 z-10" ref={continentPanelRef}>
-          <button
-            onClick={() => setShowContinentPanel(!showContinentPanel)}
-            className="bg-slate-900/95 backdrop-blur-lg rounded-full shadow-2xl p-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
-          >
-            ▶️
-          </button>
-          {showContinentPanel && (
-            <div className="absolute bottom-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4">
-              <div className="flex flex-col gap-4">
-                {/* 빠른 이동 - 대륙별 */}
-                <div>
-                  <div className="text-white font-medium text-sm mb-2 flex items-center gap-2">
-                    <span className="text-base">🚀</span>
-                    <span>대륙별 이동</span>
+        (selectedLine || selectedCountry) ? null : (
+          <div className="absolute bottom-6 right-6 z-10" ref={continentPanelRef}>
+            <button
+              onClick={() => setShowContinentPanel(!showContinentPanel)}
+              className="bg-slate-900/95 backdrop-blur-lg rounded-full shadow-2xl p-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
+            >
+              ▶️
+            </button>
+            {showContinentPanel && (
+              <div className="absolute bottom-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4">
+                <div className="flex flex-col gap-4">
+                  {/* 빠른 이동 - 대륙별 */}
+                  <div>
+                    <div className="text-white font-medium text-sm mb-2 flex items-center gap-2">
+                      <span className="text-base">🚀</span>
+                      <span>대륙별 이동</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {continents.map(({continent, flag, countries, description}) => (
+                        <button
+                          key={continent}
+                          onClick={() => handleContinentClick(continent, countries)}
+                          className="aspect-square bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-xl hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-xl font-bold shadow-lg"
+                          title={description}
+                        >
+                          {flag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {continents.map(({continent, flag, countries, description}) => (
-                      <button
-                        key={continent}
-                        onClick={() => handleContinentClick(continent, countries)}
-                        className="aspect-square bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-xl hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-xl font-bold shadow-lg"
-                        title={description}
+                  
+                  {/* 지구본 조작 */}
+                  <div>
+                    <div className="text-white font-medium text-sm mb-2 flex items-center gap-2">
+                      <span className="text-base">🎮</span>
+                      <span>지구본 조작</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={resetView}
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
                       >
-                        {flag}
+                        <span className="text-base">🏠</span>
+                        <span>홈</span>
                       </button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* 지구본 조작 */}
-                <div>
-                  <div className="text-white font-medium text-sm mb-2 flex items-center gap-2">
-                    <span className="text-base">🎮</span>
-                    <span>지구본 조작</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={resetView}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
-                    >
-                      <span className="text-base">🏠</span>
-                      <span>홈</span>
-                    </button>
-                    <button 
-                      onClick={toggleRotation}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
-                    >
-                      <span className="text-base">🔄</span>
-                      <span>회전</span>
-                    </button>
+                      <button 
+                        onClick={toggleRotation}
+                        className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
+                      >
+                        <span className="text-base">🔄</span>
+                        <span>회전</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )} 
+          </div>
+        )
       ) : (
         <div className="absolute bottom-6 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10">
           <div className="flex gap-6">

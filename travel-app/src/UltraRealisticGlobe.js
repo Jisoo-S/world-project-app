@@ -653,12 +653,21 @@ const UltraRealisticGlobe = () => {
             const dy = arc.endLat - arc.startLat;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
-            if (distance > 180) {
-              return 0.5;
+            // 먼 거리는 높게(끊기지 않도록), 가까운 거리는 낮게(자연스럽게)
+            if (distance > 250) {
+              return 1.2;   // 아주 먼 거리 - 높게 유지
+            } else if (distance > 180) {
+              return 0.9;   // 대륙간 장거리 - 높게 유지
+            } else if (distance > 120) {
+              return 0.7;   // 중장거리 - 높게 유지
             } else if (distance > 90) {
-              return 0.3;
+              return 0.5;   // 중거리 - 높게 유지
+            } else if (distance > 60) {
+              return 0.15;  // 중단거리 - 낮게 유지
+            } else if (distance > 30) {
+              return 0.1;   // 단거리 - 낮게 유지
             } else {
-              return 0.1;
+              return 0.05;  // 아주 가까운 거리 - 낮게 유지
             }
           })
           .arcStroke(1.5)
@@ -845,7 +854,7 @@ const UltraRealisticGlobe = () => {
       {window.innerWidth <= 768 ? (
         // 모바일: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
         <div className="absolute bottom-6 left-6 z-10 flex gap-2">
-          {user ? (
+          {user && !selectedLine && !selectedCountry ? (
             <>
               <button
                 onClick={handleSignOut}
@@ -861,19 +870,21 @@ const UltraRealisticGlobe = () => {
               </button>
             </>
           ) : (
+            !selectedLine && !selectedCountry && (
             <button
               onClick={() => setShowAuth(true)}
               className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
             >
               Sign In
             </button>
+            )
           )}
         </div>
       ) : (
         // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
         <>
           <div className="absolute top-6 right-20 z-10">
-            {user ? (
+            {user && !selectedLine && !selectedCountry ? (
               <button
                 onClick={handleSignOut}
                 className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
@@ -881,16 +892,18 @@ const UltraRealisticGlobe = () => {
                 Sign Out
               </button>
             ) : (
+              !selectedLine && !selectedCountry && (
               <button
                 onClick={() => setShowAuth(true)}
                 className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
               >
                 Sign In
               </button>
+              )
             )}
           </div>
           {/* 데스크톱: 왼쪽 하단에 설정 버튼 */}
-          {user && (
+          {user && !selectedLine && !selectedCountry && (
             <div className="absolute bottom-6 left-6 z-10">
               <button
                 onClick={() => setShowSettings(true)}
@@ -915,6 +928,8 @@ const UltraRealisticGlobe = () => {
         userTravelData={userTravelData}
         showContinentPanel={showContinentPanel}
         setShowContinentPanel={setShowContinentPanel}
+        selectedLine={selectedLine}
+        selectedCountry={selectedCountry}
       />
 
       <TravelStatsPanel 

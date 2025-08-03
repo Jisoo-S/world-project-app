@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { countryData } from '../data/countryData';
 import { supabase } from '../supabaseClient';
 
 const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHomeCountry }) => {
+  const modalContentRef = useRef(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedHomeCountry, setSelectedHomeCountry] = useState(homeCountry);
@@ -67,9 +68,15 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
 
   if (!showSettings) return null;
 
+  const handleOverlayClick = (event) => {
+    if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
+      setShowSettings(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/20">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={handleOverlayClick}>
+      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/20" ref={modalContentRef} onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-white text-xl font-bold">⚙️ 설정</h2>
           <button
