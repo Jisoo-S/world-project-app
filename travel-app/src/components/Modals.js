@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { countryData } from '../data/countryData';
 
 export const AddTravelModal = ({ 
@@ -8,6 +8,29 @@ export const AddTravelModal = ({
   setNewTravelData, 
   addTravelDestination 
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // 국가 리스트를 가나다 순으로 정렬
+  const sortedCountries = useMemo(() => {
+    return Object.entries(countryData).sort((a, b) => {
+      const aKorean = a[1].koreanName;
+      const bKorean = b[1].koreanName;
+      return aKorean.localeCompare(bKorean, 'ko');
+    });
+  }, []);
+
+  // 검색 쿼리에 따른 필터링
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery.trim()) return sortedCountries;
+    
+    const query = searchQuery.toLowerCase();
+    return sortedCountries.filter(([englishName, data]) => 
+      englishName.toLowerCase().includes(query) || 
+      data.koreanName.includes(searchQuery)
+    );
+  }, [searchQuery, sortedCountries]);
+
   if (!showAddTravel) return null;
 
   return (
@@ -22,6 +45,7 @@ export const AddTravelModal = ({
             startDate: '',
             endDate: ''
           });
+          setSearchQuery('');
         }
       }}
     >
@@ -29,18 +53,51 @@ export const AddTravelModal = ({
         <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 추가</h2>
         
         <div className="space-y-4">
-          <div>
+          <div className="relative">
             <label className="text-slate-300 text-sm block mb-2">국가</label>
-            <select
-              value={newTravelData.country}
-              onChange={(e) => setNewTravelData({...newTravelData, country: e.target.value})}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              placeholder="국가명을 입력하세요"
               className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-            >
-              <option value="">국가를 선택하세요</option>
-              {Object.entries(countryData).map(([englishName, data]) => (
-                <option key={englishName} value={englishName}>{data.koreanName} ({englishName})</option>
-              ))}
-            </select>
+            />
+            
+            {/* 선택된 국가 표시 */}
+            {newTravelData.country && (
+              <div className="mt-2 text-sm text-blue-400">
+                선택됨: {countryData[newTravelData.country].koreanName} ({newTravelData.country})
+              </div>
+            )}
+            
+            {/* 드롭다운 리스트 */}
+            {showDropdown && (
+              <div className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-slate-800 border border-slate-700 rounded-lg shadow-xl">
+                {filteredCountries.length > 0 ? (
+                  filteredCountries.map(([englishName, data]) => (
+                    <div
+                      key={englishName}
+                      onClick={() => {
+                        setNewTravelData({...newTravelData, country: englishName});
+                        setSearchQuery(`${data.koreanName} (${englishName})`);
+                        setShowDropdown(false);
+                      }}
+                      className="px-4 py-2 hover:bg-slate-700 cursor-pointer text-white border-b border-slate-700 last:border-b-0"
+                    >
+                      {data.koreanName} ({englishName})
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-slate-400">
+                    검색 결과가 없습니다
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <div>
@@ -93,6 +150,7 @@ export const AddTravelModal = ({
                 startDate: '',
                 endDate: ''
               });
+              setSearchQuery('');
             }}
             className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
           >

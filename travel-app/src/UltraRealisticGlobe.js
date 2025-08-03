@@ -309,11 +309,29 @@ const UltraRealisticGlobe = () => {
         const routeKey = `${startCountryName}-${currentTrip.country}`;
         
         if (!routesMap[routeKey]) {
+          // 태평양 횡단 경로 처리
+          let startLng = startPointCoords[1];
+          let endLng = currentTrip.coords[1];
+          
+          // 경도 차이 계산
+          let lngDiff = endLng - startLng;
+          
+          // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
+          if (Math.abs(lngDiff) > 180) {
+            if (lngDiff > 0) {
+              // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
+              startLng = startLng + 360;
+            } else {
+              // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
+              endLng = endLng + 360;
+            }
+          }
+          
           routesMap[routeKey] = {
             startLat: startPointCoords[0],
-            startLng: startPointCoords[1],
+            startLng: startLng,
             endLat: currentTrip.coords[0],
-            endLng: currentTrip.coords[1],
+            endLng: endLng,
             color: '#60a5fa',
             stroke: 2,
             startCountry: startCountryName,
