@@ -572,6 +572,18 @@ const UltraRealisticGlobe = () => {
     let globeInstance = null;
     let mounted = true;
 
+    const toRad = deg => deg * Math.PI / 180;
+    function haversineDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // km
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+
     const initGlobe = async () => {
       try {
         if (!isInitialLoad) {
@@ -649,27 +661,19 @@ const UltraRealisticGlobe = () => {
           .arcColor(d => d.color)
           .arcDashLength(1)
           .arcAltitude(arc => {
-            const dx = arc.endLng - arc.startLng;
-            const dy = arc.endLat - arc.startLat;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            // 먼 거리는 높게(끊기지 않도록), 가까운 거리는 낮게(자연스럽게)
-            if (distance > 250) {
-              return 1.2;   // 아주 먼 거리 - 높게 유지
-            } else if (distance > 180) {
-              return 0.9;   // 대륙간 장거리 - 높게 유지
-            } else if (distance > 120) {
-              return 0.7;   // 중장거리 - 높게 유지
-            } else if (distance > 90) {
-              return 0.5;   // 중거리 - 높게 유지
-            } else if (distance > 60) {
-              return 0.15;  // 중단거리 - 낮게 유지
-            } else if (distance > 30) {
-              return 0.1;   // 단거리 - 낮게 유지
-            } else {
-              return 0.05;  // 아주 가까운 거리 - 낮게 유지
-            }
+            const distance = haversineDistance(arc.startLat, arc.startLng, arc.endLat, arc.endLng);
+
+            if (distance > 17000) return 0.65;
+            else if (distance > 15000) return 0.5;
+            else if (distance > 10000) return 0.3;
+            else if (distance > 8000) return 0.25;
+            else if (distance > 6000) return 0.2;
+            else if (distance > 4000) return 0.15;
+            else if (distance > 2000) return 0.12;
+            else if (distance > 1000) return 0.05;
+            else return 0.015;
           })
+
           .arcStroke(1.5)
           .arcDashLength(1)
           .arcDashGap(0)
