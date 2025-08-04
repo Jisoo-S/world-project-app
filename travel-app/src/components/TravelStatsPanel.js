@@ -11,7 +11,8 @@ const TravelStatsPanel = ({
   setSelectedCountry,
   setSelectedLine,
   setShowAddTravel,
-  setShowGlobeControlsOnMobile
+  setShowGlobeControlsOnMobile,
+  setShowAllTrips
 }) => {
   const [showLegend, setShowLegend] = useState(false);
   const isMobile = window.innerWidth <= 768;
@@ -46,12 +47,20 @@ const TravelStatsPanel = ({
         <div className="absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 min-w-72">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold text-lg">📊 여행 통계</h3>
-            <button 
-              onClick={() => setShowLegend(!showLegend)}
-              className="text-slate-400 hover:text-white transition-colors text-lg"
-            >
-              📈
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowAllTrips(true)}
+                className="text-slate-400 hover:text-white transition-colors text-sm font-medium"
+              >
+                전체보기
+              </button>
+              <button 
+                onClick={() => setShowLegend(!showLegend)}
+                className="text-slate-400 hover:text-white transition-colors text-lg"
+              >
+                📈
+              </button>
+            </div>
           </div>
           
           {showLegend && (

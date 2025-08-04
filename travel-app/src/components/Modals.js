@@ -301,6 +301,120 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
   );
 };
 
+export const AllTripsModal = ({ showAllTrips, setShowAllTrips, userTravelData, countryData }) => {
+  if (!showAllTrips) return null;
+
+  // 모든 여행을 시간순으로 정렬
+  const allTrips = [];
+  Object.entries(userTravelData).forEach(([countryEnglishName, data]) => {
+    data.trips.forEach(trip => {
+      allTrips.push({
+        country: countryEnglishName,
+        koreanName: countryData[countryEnglishName]?.koreanName || countryEnglishName,
+        cities: trip.cities,
+        startDate: trip.startDate,
+        endDate: trip.endDate
+      });
+    });
+  });
+
+  // 시작 날짜순으로 정렬
+  allTrips.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+  // 날짜 포맷 함수
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // 여행 기간 계산 함수
+  const calculateDays = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setShowAllTrips(false);
+        }
+      }}
+    >
+      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-white font-bold text-2xl flex items-center gap-2">
+            🌍 전체 여행 기록
+          </h2>
+          <button
+            onClick={() => setShowAllTrips(false)}
+            className="text-slate-400 hover:text-white transition-colors text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
+          {allTrips.length > 0 ? (
+            <div className="space-y-4">
+              {allTrips.map((trip, index) => (
+                <div key={index} className="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 hover:border-blue-500/50 transition-all">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-white">
+                          {trip.koreanName} ({trip.country})
+                        </h3>
+                        <span className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded-lg text-sm">
+                          {calculateDays(trip.startDate, trip.endDate)}일
+                        </span>
+                      </div>
+                      <div className="text-slate-300 text-sm mb-2">
+                        📍 {trip.cities.join(' • ')}
+                      </div>
+                      <div className="text-slate-400 text-sm">
+                        📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-slate-500 text-xs">
+                        #{index + 1}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-slate-400 text-lg mb-2">✈️</div>
+              <p className="text-slate-400">등록된 여행 기록이 없습니다.</p>
+            </div>
+          )}
+        </div>
+        
+        {allTrips.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-slate-700">
+            <div className="flex flex-wrap gap-6 text-sm text-slate-400">
+              <div>총 여행: <span className="text-blue-400 font-semibold">{allTrips.length}회</span></div>
+              <div>총 국가: <span className="text-green-400 font-semibold">{Object.keys(userTravelData).length}개국</span></div>
+              <div>총 도시: <span className="text-purple-400 font-semibold">{Object.values(userTravelData).reduce((sum, data) => sum + data.cities.length, 0)}개</span></div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const DateErrorModal = ({ showDateErrorModal, setShowDateErrorModal }) => {
   if (!showDateErrorModal) return null;
 

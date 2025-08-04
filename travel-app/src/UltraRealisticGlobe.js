@@ -5,7 +5,7 @@ import LoadingScreen from './components/LoadingScreen';
 import TravelStatsPanel from './components/TravelStatsPanel';
 import GlobeControls from './components/GlobeControls';
 import SelectedCountryPanel from './components/SelectedCountryPanel';
-import { AddTravelModal, EditTravelModal, DateErrorModal } from './components/Modals';
+import { AddTravelModal, EditTravelModal, DateErrorModal, AllTripsModal } from './components/Modals';
 import AuthModal from './components/AuthModal';
 import SettingsModal from './components/SettingsModal';
 import LineInfoPanel from './components/LineInfoPanel';
@@ -36,6 +36,7 @@ const UltraRealisticGlobe = () => {
   const [showGlobeControlsOnMobile, setShowGlobeControlsOnMobile] = useState(true);
   const [showContinentPanel, setShowContinentPanel] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
+  const [showAllTrips, setShowAllTrips] = useState(false);
   const lineInfoRef = useRef(null);
   
   // 인증 관련 상태
@@ -286,31 +287,177 @@ const UltraRealisticGlobe = () => {
       return [];
     }
 
-    let previousCoords = defaultCoords;
-    let previousEndDate = null;
+    // 날짜가 겹치는지 확인하는 함수
+    const isDateOverlapping = (start1, end1, start2, end2) => {
+      const s1 = new Date(start1);
+      const e1 = new Date(end1);
+      const s2 = new Date(start2);
+      const e2 = new Date(end2);
+      return s1 <= e2 && s2 <= e1;
+    };
 
-    allTripsFlat.forEach((currentTrip) => {
-      const currentTripStartDate = new Date(currentTrip.startDate);
-      const previousTripEndDate = previousEndDate ? new Date(previousEndDate) : null;
+    allTripsFlat.forEach((currentTrip, index) => {
+      // 현재 여행의 시작날짜와 같은 날짜에 끝나는 여행들 찾기 (정확히 연결되는 경우)
+      const exactConnectingTrips = allTripsFlat.filter((trip, tripIndex) => {
+        return tripIndex < index && trip.endDate === currentTrip.startDate;
+      });
 
-      let startPointCoords;
-      let startCountryName = defaultCountry;
-      
-      if (previousTripEndDate && currentTrip.startDate !== previousEndDate) {
-        startPointCoords = defaultCoords;
-        startCountryName = defaultCountry;
-      } else {
-        startPointCoords = previousCoords;
-        const prevCountry = allTripsFlat[allTripsFlat.indexOf(currentTrip) - 1];
-        startCountryName = prevCountry ? prevCountry.country : defaultCountry;
+      // 현재 여행과 기간이 겹치는 여행들 찾기 (겹치는 기간이 있는 경우)
+      const overlappingTrips = allTripsFlat.filter((trip, tripIndex) => {
+        return tripIndex < index && 
+               trip.endDate !== currentTrip.startDate && // 정확히 연결되는 경우는 제외
+               isDateOverlapping(trip.startDate, trip.endDate, currentTrip.startDate, currentTrip.endDate);
+      });
+
+      // 현재 여행의 종료날짜와 같은 날짜에 시작하는 다른 여행이 있는지 확인
+      const hasFollowingTrip = allTripsFlat.some((trip, tripIndex) => {
+        return tripIndex > index && trip.startDate === currentTrip.endDate;
+      });
+
+      let hasConnection = false;
+
+      // 1. 정확히 연결되는 여행들과 연결
+      if (exactConnectingTrips.length > 0) {
+        exactConnectingTrips.forEach(connectingTrip => {
+          const routeKey = `${connectingTrip.country}-${currentTrip.country}`;
+          
+          if (!routesMap[routeKey]) {
+            // 태평양 횡단 경로 처리
+            let startLng = connectingTrip.coords[1];
+            let endLng = currentTrip.coords[1];
+            
+            // 경도 차이 계산
+            let lngDiff = endLng - startLng;
+            
+            // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
+            if (Math.abs(lngDiff) > 180) {
+              if (lngDiff > 0) {
+                // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
+                startLng = startLng + 360;
+              } else {
+                // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
+                endLng = endLng + 360;
+              }
+            }
+            
+            routesMap[routeKey] = {
+              startLat: connectingTrip.coords[0],
+              startLng: startLng,
+              endLat: currentTrip.coords[0],
+              endLng: endLng,
+              color: '#60a5fa',
+              stroke: 2,
+              startCountry: connectingTrip.country,
+              endCountry: currentTrip.country,
+              trips: []
+            };
+          }
+          
+          // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
+          routesMap[routeKey].trips.unshift({
+            startDate: currentTrip.startDate,
+            endDate: currentTrip.endDate
+          });
+        });
+        hasConnection = true;
+        
+        // 정확히 연결된 여행이지만, 다음 여행이 없으면 홈 국가와도 연결
+        if (!hasFollowingTrip) {
+          const homeRouteKey = `${currentTrip.country}-${defaultCountry}`;
+          
+          if (!routesMap[homeRouteKey]) {
+            // 태평양 횡단 경로 처리
+            let startLng = currentTrip.coords[1];
+            let endLng = defaultCoords[1];
+            
+            // 경도 차이 계산
+            let lngDiff = endLng - startLng;
+            
+            // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
+            if (Math.abs(lngDiff) > 180) {
+              if (lngDiff > 0) {
+                // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
+                startLng = startLng + 360;
+              } else {
+                // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
+                endLng = endLng + 360;
+              }
+            }
+            
+            routesMap[homeRouteKey] = {
+              startLat: currentTrip.coords[0],
+              startLng: startLng,
+              endLat: defaultCoords[0],
+              endLng: endLng,
+              color: '#60a5fa',
+              stroke: 2,
+              startCountry: currentTrip.country,
+              endCountry: defaultCountry,
+              trips: []
+            };
+          }
+          
+          // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
+          routesMap[homeRouteKey].trips.unshift({
+            startDate: currentTrip.startDate,
+            endDate: currentTrip.endDate
+          });
+        }
       }
 
-      if (startPointCoords[0] !== currentTrip.coords[0] || startPointCoords[1] !== currentTrip.coords[1]) {
-        const routeKey = `${startCountryName}-${currentTrip.country}`;
+      // 2. 기간이 겹치는 여행들과 연결
+      if (overlappingTrips.length > 0) {
+        overlappingTrips.forEach(overlappingTrip => {
+          const routeKey = `${overlappingTrip.country}-${currentTrip.country}`;
+          
+          if (!routesMap[routeKey]) {
+            // 태평양 횡단 경로 처리
+            let startLng = overlappingTrip.coords[1];
+            let endLng = currentTrip.coords[1];
+            
+            // 경도 차이 계산
+            let lngDiff = endLng - startLng;
+            
+            // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
+            if (Math.abs(lngDiff) > 180) {
+              if (lngDiff > 0) {
+                // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
+                startLng = startLng + 360;
+              } else {
+                // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
+                endLng = endLng + 360;
+              }
+            }
+            
+            routesMap[routeKey] = {
+              startLat: overlappingTrip.coords[0],
+              startLng: startLng,
+              endLat: currentTrip.coords[0],
+              endLng: endLng,
+              color: '#60a5fa', // 겹치는 기간 경로도 파란색으로 통일
+              stroke: 2,
+              startCountry: overlappingTrip.country,
+              endCountry: currentTrip.country,
+              trips: []
+            };
+          }
+          
+          // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
+          routesMap[routeKey].trips.unshift({
+            startDate: currentTrip.startDate,
+            endDate: currentTrip.endDate
+          });
+        });
+        hasConnection = true;
+      }
+
+      // 3. 연결되는 여행이 없는 경우, 홈 국가와 연결
+      if (!hasConnection) {
+        const routeKey = `${defaultCountry}-${currentTrip.country}`;
         
         if (!routesMap[routeKey]) {
           // 태평양 횡단 경로 처리
-          let startLng = startPointCoords[1];
+          let startLng = defaultCoords[1];
           let endLng = currentTrip.coords[1];
           
           // 경도 차이 계산
@@ -328,13 +475,13 @@ const UltraRealisticGlobe = () => {
           }
           
           routesMap[routeKey] = {
-            startLat: startPointCoords[0],
+            startLat: defaultCoords[0],
             startLng: startLng,
             endLat: currentTrip.coords[0],
             endLng: endLng,
             color: '#60a5fa',
             stroke: 2,
-            startCountry: startCountryName,
+            startCountry: defaultCountry,
             endCountry: currentTrip.country,
             trips: []
           };
@@ -346,9 +493,6 @@ const UltraRealisticGlobe = () => {
           endDate: currentTrip.endDate
         });
       }
-      
-      previousCoords = currentTrip.coords;
-      previousEndDate = currentTrip.endDate;
     });
 
     // routesMap을 routes 배열로 변환
@@ -947,6 +1091,7 @@ const UltraRealisticGlobe = () => {
         setSelectedLine={setSelectedLine}
         setShowAddTravel={setShowAddTravel}
         setShowGlobeControlsOnMobile={setShowGlobeControlsOnMobile}
+        setShowAllTrips={setShowAllTrips}
       />
 
       <SelectedCountryPanel 
@@ -972,6 +1117,13 @@ const UltraRealisticGlobe = () => {
         newTravelData={newTravelData}
         setNewTravelData={setNewTravelData}
         addTravelDestination={addTravelDestination}
+      />
+
+      <AllTripsModal 
+        showAllTrips={showAllTrips}
+        setShowAllTrips={setShowAllTrips}
+        userTravelData={userTravelData}
+        countryData={countryData}
       />
 
       <EditTravelModal 
