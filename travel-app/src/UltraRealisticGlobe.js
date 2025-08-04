@@ -296,7 +296,7 @@ const UltraRealisticGlobe = () => {
       let startPointCoords;
       let startCountryName = defaultCountry;
       
-      if (previousTripEndDate && (currentTripStartDate - previousTripEndDate) / (1000 * 60 * 60 * 24) > 1) {
+      if (previousTripEndDate && currentTrip.startDate !== previousEndDate) {
         startPointCoords = defaultCoords;
         startCountryName = defaultCountry;
       } else {

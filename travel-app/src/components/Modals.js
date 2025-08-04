@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { countryData } from '../data/countryData';
 
 export const AddTravelModal = ({ 
@@ -10,6 +10,26 @@ export const AddTravelModal = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
+  // 모달이 열릴 때마다 검색어 초기화
+  useEffect(() => {
+    if (showAddTravel) {
+      setSearchQuery('');
+      setShowDropdown(false);
+      setSelectedIndex(-1);
+    }
+  }, [showAddTravel]);
+
+  // 선택된 국가가 변경될 때 검색어 업데이트
+  useEffect(() => {
+    if (newTravelData.country && countryData[newTravelData.country]) {
+      const countryInfo = countryData[newTravelData.country];
+      setSearchQuery(`${countryInfo.koreanName} (${newTravelData.country})`);
+    } else if (!newTravelData.country) {
+      setSearchQuery('');
+    }
+  }, [newTravelData.country]);
 
   // 국가 리스트를 가나다 순으로 정렬
   const sortedCountries = useMemo(() => {
@@ -31,6 +51,68 @@ export const AddTravelModal = ({
     );
   }, [searchQuery, sortedCountries]);
 
+  // 국가 선택 함수
+  const selectCountry = (englishName) => {
+    setNewTravelData({...newTravelData, country: englishName});
+    setShowDropdown(false);
+    setSelectedIndex(-1);
+  };
+
+  // 키보드 이벤트 핸들러
+  const handleKeyDown = (e) => {
+    if (!showDropdown) return;
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < filteredCountries.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev > 0 ? prev - 1 : filteredCountries.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && filteredCountries[selectedIndex]) {
+          selectCountry(filteredCountries[selectedIndex][0]);
+        } else if (filteredCountries.length === 1) {
+          selectCountry(filteredCountries[0][0]);
+        }
+        break;
+      case 'Escape':
+        setShowDropdown(false);
+        setSelectedIndex(-1);
+        break;
+    }
+  };
+
+  // 여행지 추가 함수 래퍼
+  const handleAddTravel = async () => {
+    await addTravelDestination();
+    // 추가 성공 후 검색어도 리셋
+    setSearchQuery('');
+    setShowDropdown(false);
+    setSelectedIndex(-1);
+  };
+
+  // 모달 닫기 함수
+  const handleCloseModal = () => {
+    setShowAddTravel(false);
+    setNewTravelData({
+      country: '',
+      cities: '',
+      startDate: '',
+      endDate: ''
+    });
+    setSearchQuery('');
+    setShowDropdown(false);
+    setSelectedIndex(-1);
+  };
+
   if (!showAddTravel) return null;
 
   return (
@@ -38,14 +120,7 @@ export const AddTravelModal = ({
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
-          setShowAddTravel(false);
-          setNewTravelData({
-            country: '',
-            cities: '',
-            startDate: '',
-            endDate: ''
-          });
-          setSearchQuery('');
+          handleCloseModal();
         }
       }}
     >
@@ -61,8 +136,14 @@ export const AddTravelModal = ({
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setShowDropdown(true);
+                setSelectedIndex(-1);
+                // 검색어가 변경되면 기존 선택 해제
+                if (newTravelData.country) {
+                  setNewTravelData({...newTravelData, country: ''});
+                }
               }}
               onFocus={() => setShowDropdown(true)}
+              onKeyDown={handleKeyDown}
               placeholder="국가명을 입력하세요"
               className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
             />
@@ -78,15 +159,13 @@ export const AddTravelModal = ({
             {showDropdown && (
               <div className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-slate-800 border border-slate-700 rounded-lg shadow-xl">
                 {filteredCountries.length > 0 ? (
-                  filteredCountries.map(([englishName, data]) => (
+                  filteredCountries.map(([englishName, data], index) => (
                     <div
                       key={englishName}
-                      onClick={() => {
-                        setNewTravelData({...newTravelData, country: englishName});
-                        setSearchQuery(`${data.koreanName} (${englishName})`);
-                        setShowDropdown(false);
-                      }}
-                      className="px-4 py-2 hover:bg-slate-700 cursor-pointer text-white border-b border-slate-700 last:border-b-0"
+                      onClick={() => selectCountry(englishName)}
+                      className={`px-4 py-2 cursor-pointer text-white border-b border-slate-700 last:border-b-0 ${
+                        index === selectedIndex ? 'bg-slate-600' : 'hover:bg-slate-700'
+                      }`}
                     >
                       {data.koreanName} ({englishName})
                     </div>
@@ -136,22 +215,13 @@ export const AddTravelModal = ({
         
         <div className="flex gap-3 mt-6">
           <button
-            onClick={addTravelDestination}
+            onClick={handleAddTravel}
             className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
           >
             추가
           </button>
           <button
-            onClick={() => {
-              setShowAddTravel(false);
-              setNewTravelData({
-                country: '',
-                cities: '',
-                startDate: '',
-                endDate: ''
-              });
-              setSearchQuery('');
-            }}
+            onClick={handleCloseModal}
             className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
           >
             취소
