@@ -4,15 +4,27 @@ import { countryData } from '../data/countryData';
 
 const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [homeCountry, setHomeCountry] = useState('South Korea');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const modalRef = useRef(null);
+
+  // showAuth가 true가 될 때마다 항상 로그인 모드로 설정
+  useEffect(() => {
+    if (showAuth) {
+      setIsSignUp(false);
+      setIsResetPassword(false);
+      setError('');
+      setSuccessMessage('');
+    }
+  }, [showAuth]);
 
   // 모바일 키보드 처리를 위한 useEffect
   useEffect(() => {
@@ -81,9 +93,22 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccessMessage('');
 
     try {
-      if (isSignUp) {
+      if (isResetPassword) {
+        // 임시 비밀번호 발송 (기본 방식: Supabase 비밀번호 재설정 링크)
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+        if (error) throw error;
+
+        setSuccessMessage('비밀번호 재설정 링크가 이메일로 전송되었습니다.\n이메일을 확인해주세요.');
+        
+        setIsResetPassword(false);
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 5000);
+      } else if (isSignUp) {
         // 회원가입
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
@@ -105,9 +130,11 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
             ]);
 
           if (profileError) throw profileError;
-        }
 
-        alert('회원가입이 완료되었습니다!');
+          // 성공 콜백 호출 및 모달 닫기
+          onAuthSuccess(authData.user, '회원가입이 완료되었습니다.\n로그인하여 여행을 기록해보세요!');
+          setShowAuth(false);
+        }
       } else {
         // 로그인
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -164,7 +191,7 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
       <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 w-full max-w-md mx-4 my-auto max-h-[85vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">
-            {isSignUp ? '회원가입' : '로그인'}
+            {isResetPassword ? '비밀번호 찾기' : (isSignUp ? '회원가입' : '로그인')}
           </h2>
           <button
             onClick={() => setShowAuth(false)}
@@ -202,24 +229,26 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
-              비밀번호
-            </label>
-            <input
-              ref={passwordInputRef}
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-lg text-white text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-              required
-              autoComplete={isSignUp ? "new-password" : "current-password"}
-              enterKeyHint={isSignUp ? "next" : "done"}
-              style={{ fontSize: '16px', WebkitAppearance: 'none' }}
-              onFocus={handleInputFocus}
-            />
-          </div>
+          {!isResetPassword && (
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                비밀번호
+              </label>
+              <input
+                ref={passwordInputRef}
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-lg text-white text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                required
+                autoComplete={isSignUp ? "new-password" : "current-password"}
+                enterKeyHint={isSignUp ? "next" : "done"}
+                style={{ fontSize: '16px', WebkitAppearance: 'none' }}
+                onFocus={handleInputFocus}
+              />
+            </div>
+          )}
 
           {isSignUp && (
             <div>
@@ -248,22 +277,56 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
             </div>
           )}
 
+          {successMessage && (
+            <div className="text-green-400 text-sm bg-green-400/10 border border-green-400/20 rounded-lg p-3">
+              {successMessage}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
-            {loading ? '처리 중...' : (isSignUp ? '회원가입' : '로그인')}
+            {loading ? '처리 중...' : (isResetPassword ? '재설정 링크 보내기' : (isSignUp ? '회원가입' : '로그인'))}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-blue-400 hover:text-blue-300 text-sm transition-colors p-2"
-          >
-            {isSignUp ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}
-          </button>
+        <div className="mt-4 text-center space-y-2">
+          {isResetPassword ? (
+            <button
+              onClick={() => {
+                setIsResetPassword(false);
+                setError('');
+                setSuccessMessage('');
+              }}
+              className="text-blue-400 hover:text-blue-300 text-sm transition-colors p-2 block w-full"
+            >
+              로그인으로 돌아가기
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-400 hover:text-blue-300 text-sm transition-colors p-2 block w-full"
+              >
+                {isSignUp ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}
+              </button>
+              
+              {!isSignUp && (
+                <button
+                  onClick={() => {
+                    setIsResetPassword(true);
+                    setError('');
+                    setPassword('');
+                  }}
+                  className="text-slate-400 hover:text-slate-300 text-xs transition-colors p-1"
+                >
+                  비밀번호를 잊으셨나요?
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

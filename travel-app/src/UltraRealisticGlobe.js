@@ -9,6 +9,7 @@ import { AddTravelModal, EditTravelModal, DateErrorModal, AllTripsModal } from '
 import AuthModal from './components/AuthModal';
 import SettingsModal from './components/SettingsModal';
 import LineInfoPanel from './components/LineInfoPanel';
+import ResetPasswordModal from './components/ResetPasswordModal';
 import { supabase } from './supabaseClient';
 
 const UltraRealisticGlobe = () => {
@@ -44,6 +45,8 @@ const UltraRealisticGlobe = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [homeCountry, setHomeCountry] = useState('South Korea');
   const [showSettings, setShowSettings] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // 여행 경로 정보 패널 외부 클릭 감지
   useEffect(() => {
@@ -223,9 +226,13 @@ const UltraRealisticGlobe = () => {
   };
 
   // 로그인 성공 핸들러
-  const handleAuthSuccess = (authUser) => {
+  const handleAuthSuccess = (authUser, message = '') => {
     setUser(authUser);
     loadUserData(authUser.id);
+    if (message) {
+      setSuccessMessage(message);
+      setTimeout(() => setSuccessMessage(''), 5000); // 5초 후 메시지 사라짐
+    }
   };
 
   // 로그아웃
@@ -1149,7 +1156,29 @@ const UltraRealisticGlobe = () => {
         user={user}
         homeCountry={homeCountry}
         setHomeCountry={setHomeCountry}
+        onSignOut={handleSignOut}
       />
+
+      <ResetPasswordModal
+        showResetPassword={showResetPassword}
+        setShowResetPassword={setShowResetPassword}
+      />
+
+      {/* 성공 메시지 모달 */}
+      {successMessage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-green-500/30 text-center">
+            
+            <p className="text-white whitespace-pre-line">{successMessage}</p>
+            <button 
+              onClick={() => setSuccessMessage('')}
+              className="mt-6 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition-all"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
 
       <style>
         {`

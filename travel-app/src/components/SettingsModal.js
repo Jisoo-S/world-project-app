@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { countryData } from '../data/countryData';
 import { supabase } from '../supabaseClient';
 
-const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHomeCountry }) => {
+const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHomeCountry, onSignOut }) => {
   const modalContentRef = useRef(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -178,6 +178,68 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUpdating ? '업데이트 중...' : '저장'}
+          </button>
+        </div>
+        
+        {/* 회원 탈퇴 */}
+        <div className="mt-6 pt-4 border-t border-slate-700">
+          <button
+            onClick={async () => {
+              if (window.confirm('정말로 회원 탈퇴를 하시겠습니까?\n\n탈퇴 시 모든 여행 기록이 삭제되며 복구할 수 없습니다.')) {
+                if (window.confirm('다시 한 번 확인합니다.\n\n정말로 탈퇴하시겠습니까?')) {
+                  try {
+                    setIsUpdating(true);
+                    
+                    // 1. 사용자의 모든 여행 기록 삭제
+                    const { error: deleteTripsError } = await supabase
+                      .from('user_travels')
+                      .delete()
+                      .eq('user_id', user.id);
+                    
+                    if (deleteTripsError) throw deleteTripsError;
+                    
+                    // 2. 사용자 프로필 삭제
+                    const { error: deleteProfileError } = await supabase
+                      .from('user_profiles')
+                      .delete()
+                      .eq('id', user.id);
+                    
+                    if (deleteProfileError) throw deleteProfileError;
+                    
+                    // 3. 사용자 계정 삭제
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                      const { data, error: deleteError } = await supabase.functions.invoke('delete-user', {
+                        headers: {
+                          Authorization: `Bearer ${session.access_token}`
+                        }
+                      });
+                      if (deleteError) throw deleteError;
+                    }
+                    
+                    // 4. 로그아웃
+                    await supabase.auth.signOut();
+                    
+                    alert('회원 탈퇴가 완료되었습니다.\n\n그동안 이용해 주셔서 감사합니다.');
+                    
+                    // 모달 닫기 및 페이지 새로고침
+                    setShowSettings(false);
+                    if (onSignOut) onSignOut();
+                    window.location.reload();
+                    
+                  } catch (error) {
+                    console.error('회원 탈퇴 중 오류:', error);
+                    alert('회원 탈퇴 처리 중 오류가 발생했습니다.\n\n잠시 후 다시 시도해주세요.');
+                  } finally {
+                    setIsUpdating(false);
+                  }
+                }
+              }
+            }}
+            className="text-red-400 hover:text-red-300 text-xs transition-colors"
+            disabled={isUpdating}
+          >
+            {isUpdating ? '처리 중...' : '회원 탈퇴'}
           </button>
         </div>
       </div>

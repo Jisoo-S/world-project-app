@@ -72,11 +72,11 @@ const GlobeControls = ({
   return (
     <>
       {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute top-6 ${isMobile ? 'left-2' : 'left-6'} flex gap-3 z-10`}>
+      <div className={`absolute top-6 ${isMobile ? 'left-3' : 'left-6'} flex gap-3 z-10`}>
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isMobile 
-            ? 'rounded-xl p-2 w-24 h-32' 
+            ? 'rounded-xl p-2.5 w-28 h-36' 
             : 'rounded-2xl p-4 w-40 h-40'
         }`}>
           <div className={`text-white font-medium mb-2 ${
@@ -87,7 +87,7 @@ const GlobeControls = ({
               onClick={() => changeGlobeMode('satellite')}
               className={`w-full font-medium transition-all ${
                 isMobile 
-                  ? 'px-1 py-0.5 rounded-md text-xs' 
+                  ? 'px-1.5 py-1 rounded-md text-xs' 
                   : 'px-3 py-1.5 rounded-lg text-xs'
               } ${
                 globeMode === 'satellite' 
@@ -101,7 +101,7 @@ const GlobeControls = ({
               onClick={() => changeGlobeMode('night')}
               className={`w-full font-medium transition-all ${
                 isMobile 
-                  ? 'px-1 py-0.5 rounded-md text-xs' 
+                  ? 'px-1.5 py-1 rounded-md text-xs' 
                   : 'px-3 py-1.5 rounded-lg text-xs'
               } ${
                 globeMode === 'night' 
@@ -115,7 +115,7 @@ const GlobeControls = ({
               onClick={() => changeGlobeMode('topographic')}
               className={`w-full font-medium transition-all ${
                 isMobile 
-                  ? 'px-1 py-0.5 rounded-md text-xs' 
+                  ? 'px-1.5 py-1 rounded-md text-xs' 
                   : 'px-3 py-1.5 rounded-lg text-xs'
               } ${
                 globeMode === 'topographic' 
