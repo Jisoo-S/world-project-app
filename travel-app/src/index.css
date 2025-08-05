@@ -15,3 +15,49 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* 모바일 키보드 최적화 */
+@media (max-width: 768px) {
+  /* iOS Safari에서 input 자동 확대 방지 */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  
+  /* 터치 정확도 향상 */
+  button,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+  
+  /* 모달 스크롤 최적화 */
+  .fixed {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
+/* 모바일 키보드가 열렸을 때 화면 조정 */
+@supports (-webkit-touch-callout: none) {
+  /* iOS 전용 */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    position: relative;
+    z-index: 1;
+  }
+}
