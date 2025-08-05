@@ -76,7 +76,7 @@ const GlobeControls = ({
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isMobile 
-            ? 'rounded-xl p-2.5 w-28 h-36' 
+            ? 'rounded-xl p-2.5 w-24 h-32' 
             : 'rounded-2xl p-4 w-40 h-40'
         }`}>
           <div className={`text-white font-medium mb-2 ${
