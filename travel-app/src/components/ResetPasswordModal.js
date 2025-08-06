@@ -9,17 +9,36 @@ const ResetPasswordModal = ({ showResetPassword, setShowResetPassword }) => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // URL에서 토큰 확인
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
     const type = hashParams.get('type');
 
-    if (type === 'recovery' && accessToken) {
-      setShowResetPassword(true);
-      // URL 정리
-      window.history.replaceState(null, '', window.location.pathname);
-    }
+    const recoverSession = async () => {
+      if (type === 'recovery' && accessToken) {
+        // ✅ Supabase 세션 수동 복구
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        });
+
+        if (error) {
+          console.error('❌ 세션 복구 실패:', error.message);
+          setError('세션을 복구할 수 없습니다. 링크가 만료되었거나 잘못되었습니다.');
+          return;
+        }
+
+        console.log('✅ 세션 복구 성공:', data);
+        setShowResetPassword(true);
+
+        // URL 깔끔하게 정리
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
+    recoverSession();
   }, [setShowResetPassword]);
+
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
