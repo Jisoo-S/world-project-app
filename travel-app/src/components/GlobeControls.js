@@ -16,6 +16,7 @@ const GlobeControls = ({
   selectedCountry
 }) => {
   const isMobile = window.innerWidth <= 768;
+  const isSmallMobile = window.innerWidth <= 390; // iPhone 12 Pro 사이즈
   const continentPanelRef = useRef(null);
 
   // 외부 클릭 감지 (모바일 대륙 패널)
@@ -72,12 +73,12 @@ const GlobeControls = ({
   return (
     <>
       {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute top-6 ${isMobile ? 'left-3' : 'left-6'} flex gap-3 z-10`}>
+      <div className={`absolute top-6 ${isMobile ? 'left-3' : 'left-6'} z-10`}>
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isMobile 
-            ? 'rounded-xl p-2.5 w-24 h-32' 
-            : 'rounded-2xl p-4 w-40 h-40'
+            ? 'rounded-xl p-2.5 w-24' 
+            : 'rounded-2xl p-4 w-40'
         }`}>
           <div className={`text-white font-medium mb-2 ${
             isMobile ? 'text-xs' : 'text-sm font-bold mb-3'
@@ -126,50 +127,52 @@ const GlobeControls = ({
               🗺️ 지형 
             </button>
           </div>
-        </div>
-        
-        {/* 줌 컨트롤 버튼 */}
-        <div className="bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 rounded-xl p-0.5 flex flex-row gap-1 items-center self-start">
-          <button
-            onClick={() => {
-              if (globeRef.current) {
-                const currentPov = globeRef.current.pointOfView();
-                const currentAltitude = currentPov.altitude || zoomLevel;
-                const newZoom = Math.max(1.2, currentAltitude - 0.3);
-                setZoomLevel(newZoom);
-                globeRef.current.pointOfView({ 
-                  lat: currentPov.lat, 
-                  lng: currentPov.lng, 
-                  altitude: newZoom 
-                }, 300);
-              }
-            }}
-            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
-              isMobile ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm p-2'
-            }`}
-          >
-            +
-          </button>
-          <button
-            onClick={() => {
-              if (globeRef.current) {
-                const currentPov = globeRef.current.pointOfView();
-                const currentAltitude = currentPov.altitude || zoomLevel;
-                const newZoom = Math.min(8.0, currentAltitude + 0.3);  // 5.0에서 8.0으로 대폭 증가하여 훨씬 더 축소 가능
-                setZoomLevel(newZoom);
-                globeRef.current.pointOfView({ 
-                  lat: currentPov.lat, 
-                  lng: currentPov.lng, 
-                  altitude: newZoom 
-                }, 300);
-              }
-            }}
-            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
-              isMobile ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm p-2'
-            }`}
-          >
-            -
-          </button>
+          
+          {/* 줌 컨트롤 버튼들을 모드 박스 안에 */}
+          <div className={`flex flex-row gap-1 items-center justify-center ${
+            isMobile ? 'mt-2' : 'mt-3'
+          }`}>
+            <button
+              onClick={() => {
+                if (globeRef.current) {
+                  const currentPov = globeRef.current.pointOfView();
+                  const currentAltitude = currentPov.altitude || zoomLevel;
+                  const newZoom = Math.max(1.2, currentAltitude - 0.3);
+                  setZoomLevel(newZoom);
+                  globeRef.current.pointOfView({ 
+                    lat: currentPov.lat, 
+                    lng: currentPov.lng, 
+                    altitude: newZoom 
+                  }, 300);
+                }
+              }}
+              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
+                isMobile ? 'h-6 text-xs' : 'h-8 text-sm'
+              }`}
+            >
+              +
+            </button>
+            <button
+              onClick={() => {
+                if (globeRef.current) {
+                  const currentPov = globeRef.current.pointOfView();
+                  const currentAltitude = currentPov.altitude || zoomLevel;
+                  const newZoom = Math.min(8.0, currentAltitude + 0.3);
+                  setZoomLevel(newZoom);
+                  globeRef.current.pointOfView({ 
+                    lat: currentPov.lat, 
+                    lng: currentPov.lng, 
+                    altitude: newZoom 
+                  }, 300);
+                }
+              }}
+              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
+                isMobile ? 'h-6 text-xs' : 'h-8 text-sm'
+              }`}
+            >
+              -
+            </button>
+          </div>
         </div>
       </div>
 
