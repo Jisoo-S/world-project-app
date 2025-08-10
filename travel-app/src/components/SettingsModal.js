@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { countryData } from '../data/countryData';
 import { supabase } from '../supabaseClient';
+import ConfirmModal from './ConfirmModal';
 
 const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHomeCountry, onSignOut }) => {
   const modalContentRef = useRef(null);
@@ -10,6 +11,9 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showFinalDeleteConfirm, setShowFinalDeleteConfirm] = useState(false);
+  const [showWithdrawalComplete, setShowWithdrawalComplete] = useState(false);
 
   useEffect(() => {
     setSelectedHomeCountry(homeCountry);
@@ -69,6 +73,11 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
   if (!showSettings) return null;
 
   const handleOverlayClick = (event) => {
+    // 탈퇴 확인 모달들이 열려있을 때는 설정 모달을 닫지 않음
+    if (showDeleteConfirm || showFinalDeleteConfirm || showWithdrawalComplete) {
+      return;
+    }
+    
     if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
       setShowSettings(false);
     }
@@ -80,7 +89,13 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-white text-xl font-bold">⚙️ 설정</h2>
           <button
-            onClick={() => setShowSettings(false)}
+            onClick={() => {
+              // 탈퇴 확인 모달들이 열려있을 때는 설정 모달을 닫지 않음
+              if (showDeleteConfirm || showFinalDeleteConfirm || showWithdrawalComplete) {
+                return;
+              }
+              setShowSettings(false);
+            }}
             className="text-gray-400 hover:text-white transition-colors text-2xl"
           >
             ×
@@ -162,6 +177,10 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
         <div className="flex gap-3">
           <button
             onClick={() => {
+              // 탈퇴 확인 모달들이 열려있을 때는 설정 모달을 닫지 않음
+              if (showDeleteConfirm || showFinalDeleteConfirm || showWithdrawalComplete) {
+                return;
+              }
               setShowSettings(false);
               setShowPasswordChange(false);
               setPassword('');
@@ -184,58 +203,7 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
         {/* 회원 탈퇴 */}
         <div className="mt-6 pt-4 border-t border-slate-700">
           <button
-            onClick={async () => {
-              if (window.confirm('정말로 회원 탈퇴를 하시겠습니까?\n\n탈퇴 시 모든 여행 기록이 삭제되며 복구할 수 없습니다.')) {
-                if (window.confirm('다시 한 번 확인합니다.\n\n정말로 탈퇴하시겠습니까?')) {
-                  try {
-                    setIsUpdating(true);
-                    
-                    // 1. 사용자의 모든 여행 기록 삭제
-                    const { error: deleteTripsError } = await supabase
-                      .from('user_travels')
-                      .delete()
-                      .eq('user_id', user.id);
-                    
-                    if (deleteTripsError) throw deleteTripsError;
-                    
-                    // 2. 사용자 프로필 삭제
-                    const { error: deleteProfileError } = await supabase
-                      .from('user_profiles')
-                      .delete()
-                      .eq('id', user.id);
-                    
-                    if (deleteProfileError) throw deleteProfileError;
-                    
-                    // 3. 사용자 계정 삭제
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session?.access_token) {
-                      const { data, error: deleteError } = await supabase.functions.invoke('delete-user', {
-                        headers: {
-                          Authorization: `Bearer ${session.access_token}`
-                        }
-                      });
-                      if (deleteError) throw deleteError;
-                    }
-                    
-                    // 4. 로그아웃
-                    await supabase.auth.signOut();
-                    
-                    alert('회원 탈퇴가 완료되었습니다.\n\n그동안 이용해 주셔서 감사합니다.');
-                    
-                    // 모달 닫기 및 페이지 새로고침
-                    setShowSettings(false);
-                    if (onSignOut) onSignOut();
-                    window.location.reload();
-                    
-                  } catch (error) {
-                    console.error('회원 탈퇴 중 오류:', error);
-                    alert('회원 탈퇴 처리 중 오류가 발생했습니다.\n\n잠시 후 다시 시도해주세요.');
-                  } finally {
-                    setIsUpdating(false);
-                  }
-                }
-              }
-            }}
+            onClick={() => setShowDeleteConfirm(true)}
             className="text-red-400 hover:text-red-300 text-xs transition-colors"
             disabled={isUpdating}
           >
@@ -243,6 +211,127 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
           </button>
         </div>
       </div>
+
+      {/* 첫 번째 확인 모달 */}
+      <ConfirmModal
+        show={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          // 첫 번째 모달을 닫고 바로 두 번째 모달 열기
+          setShowDeleteConfirm(false);
+          // React의 비동기 업데이트를 위해 setTimeout 사용
+          setTimeout(() => {
+            setShowFinalDeleteConfirm(true);
+          }, 50);
+        }}
+        title="⚠️ 회원 탈퇴"
+        message={
+          <div className="text-center">
+            정말로 회원 탈퇴를 하시겠습니까?
+            <br />
+            탈퇴 시 모든 여행 기록이 삭제되며 복구할 수 없습니다.
+          </div>
+        }
+
+        confirmText="다음"
+        cancelText="취소"
+        isDestructive={true}
+      />
+
+      {/* 최종 확인 모달 */}
+      <ConfirmModal
+        show={showFinalDeleteConfirm}
+        onClose={() => setShowFinalDeleteConfirm(false)}
+        onConfirm={async () => {
+          try {
+            setIsUpdating(true);
+            
+            // 1. 사용자의 모든 여행 기록 삭제
+            const { error: deleteTripsError } = await supabase
+              .from('user_travels')
+              .delete()
+              .eq('user_id', user.id);
+            
+            if (deleteTripsError) throw deleteTripsError;
+            
+            // 2. 사용자 프로필 삭제
+            const { error: deleteProfileError } = await supabase
+              .from('user_profiles')
+              .delete()
+              .eq('id', user.id);
+            
+            if (deleteProfileError) throw deleteProfileError;
+            
+            // 3. 사용자 계정 삭제
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+              const { data, error: deleteError } = await supabase.functions.invoke('delete-user', {
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`
+                }
+              });
+              if (deleteError) throw deleteError;
+            }
+            
+            // 4. 로그아웃
+            await supabase.auth.signOut();
+            
+            // 탈퇴 완료 모달 표시
+            setShowFinalDeleteConfirm(false);
+            setShowWithdrawalComplete(true);
+            
+          } catch (error) {
+            console.error('회원 탈퇴 중 오류:', error);
+            alert('회원 탈퇴 처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.');
+          } finally {
+            setIsUpdating(false);
+          }
+        }}
+        title="🚨 최종 확인"
+        message={
+          <div className="text-center">
+            다시 한 번 확인합니다.
+            <br />
+            정말로 탈퇴하시겠습니까?
+	          <br />
+  	        이 작업은 되돌릴 수 없습니다.
+          </div>
+        } 
+        confirmText="탈퇴하기"
+        cancelText="취소"
+        isDestructive={true}
+        isLoading={isUpdating}
+      />
+      
+      {/* 탈퇴 완료 모달 */}
+      <ConfirmModal
+        show={showWithdrawalComplete}
+        onClose={() => {
+          // 확인 버튼을 누르면 모든 모달을 닫고 페이지 새로고침
+          setShowWithdrawalComplete(false);
+          setShowSettings(false);
+          if (onSignOut) onSignOut();
+          window.location.reload();
+        }}
+        onConfirm={() => {
+          // 확인 버튼을 누르면 모든 모달을 닫고 페이지 새로고침
+          setShowWithdrawalComplete(false);
+          setShowSettings(false);
+          if (onSignOut) onSignOut();
+          window.location.reload();
+        }}
+        title="✅ 탈퇴 완료"
+        message={
+          <div className="text-center">
+            회원 탈퇴가 완료되었습니다.
+            <br />
+            그동안 이용해 주셔서 감사합니다.
+          </div>
+        }
+        confirmText="확인"
+        cancelText=""
+        isDestructive={false}
+      />
     </div>
   );
 };

@@ -57,7 +57,7 @@ const LineInfoPanel = ({
         
         <div>
           <div className="text-white font-bold text-md mb-1">
-            {countryData[selectedLine.startCountry]?.koreanName || selectedLine.startCountry} → {countryData[selectedLine.endCountry]?.koreanName || selectedLine.endCountry}
+            {countryData[selectedLine.startCountry]?.koreanName || selectedLine.startCountry} - {countryData[selectedLine.endCountry]?.koreanName || selectedLine.endCountry}
           </div>
           <div className="text-slate-400 text-sm">
             {currentTrip.startDate} ~ {currentTrip.endDate}

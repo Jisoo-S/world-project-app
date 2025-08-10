@@ -10,6 +10,7 @@ import AuthModal from './components/AuthModal';
 import SettingsModal from './components/SettingsModal';
 import LineInfoPanel from './components/LineInfoPanel';
 import ResetPasswordModal from './components/ResetPasswordModal';
+import ConfirmModal from './components/ConfirmModal';
 import { supabase } from './supabaseClient';
 
 const UltraRealisticGlobe = () => {
@@ -47,6 +48,8 @@ const UltraRealisticGlobe = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTripData, setDeleteTripData] = useState(null);
 
   // 여행 경로 정보 패널 외부 클릭 감지
   useEffect(() => {
@@ -285,6 +288,82 @@ const UltraRealisticGlobe = () => {
 
     const routesMap = {}; // 같은 경로의 여행들을 그룹핑
     
+    // 경로 키 생성 함수 (양방향 경로를 하나로 통합)
+    const getRouteKey = (country1, country2) => {
+      // 홈 국가가 있으면 홈 국가를 항상 첫 번째로
+      if (country1 === defaultCountry && country2 !== defaultCountry) {
+        return `${country1}-${country2}`;
+      }
+      if (country2 === defaultCountry && country1 !== defaultCountry) {
+        return `${country2}-${country1}`;
+      }
+      
+      // 둘 다 홈 국가가 아니어면 한국어 이름을 정렬하여 결정
+      const korean1 = countryData[country1]?.koreanName || country1;
+      const korean2 = countryData[country2]?.koreanName || country2;
+      
+      // 한국어 정렬 비교
+      if (korean1.localeCompare(korean2, 'ko') <= 0) {
+        return `${country1}-${country2}`;
+      } else {
+        return `${country2}-${country1}`;
+      }
+    };
+    
+    // 경로 생성 도우미 함수
+    const createRoute = (country1, country2, coords1, coords2) => {
+      // 홈 국가가 포함된 경우 홈 국가를 시작점으로 설정
+      let startCountry, endCountry, startCoords, endCoords;
+      
+      if (country1 === defaultCountry) {
+        startCountry = country1;
+        endCountry = country2;
+        startCoords = coords1;
+        endCoords = coords2;
+      } else if (country2 === defaultCountry) {
+        startCountry = country2;
+        endCountry = country1;
+        startCoords = coords2;
+        endCoords = coords1;
+      } else {
+        // 둘 다 홈 국가가 아닌 경우 기존 순서 유지
+        startCountry = country1;
+        endCountry = country2;
+        startCoords = coords1;
+        endCoords = coords2;
+      }
+      
+      // 태평양 횡단 경로 처리
+      let startLng = startCoords[1];
+      let endLng = endCoords[1];
+      
+      // 경도 차이 계산
+      let lngDiff = endLng - startLng;
+      
+      // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
+      if (Math.abs(lngDiff) > 180) {
+        if (lngDiff > 0) {
+          // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
+          startLng = startLng + 360;
+        } else {
+          // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
+          endLng = endLng + 360;
+        }
+      }
+      
+      return {
+        startLat: startCoords[0],
+        startLng: startLng,
+        endLat: endCoords[0],
+        endLng: endLng,
+        color: '#60a5fa',
+        stroke: 2,
+        startCountry: startCountry,
+        endCountry: endCountry,
+        trips: []
+      };
+    };
+    
     // 로그인한 사용자는 홈 국가, 비로그인 사용자는 South Korea를 기본으로 사용
     const defaultCountry = user ? homeCountry : 'South Korea';
     const defaultCoords = countryData[defaultCountry]?.coords;
@@ -326,38 +405,15 @@ const UltraRealisticGlobe = () => {
       // 1. 정확히 연결되는 여행들과 연결
       if (exactConnectingTrips.length > 0) {
         exactConnectingTrips.forEach(connectingTrip => {
-          const routeKey = `${connectingTrip.country}-${currentTrip.country}`;
+          const routeKey = getRouteKey(connectingTrip.country, currentTrip.country);
           
           if (!routesMap[routeKey]) {
-            // 태평양 횡단 경로 처리
-            let startLng = connectingTrip.coords[1];
-            let endLng = currentTrip.coords[1];
-            
-            // 경도 차이 계산
-            let lngDiff = endLng - startLng;
-            
-            // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
-            if (Math.abs(lngDiff) > 180) {
-              if (lngDiff > 0) {
-                // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
-                startLng = startLng + 360;
-              } else {
-                // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
-                endLng = endLng + 360;
-              }
-            }
-            
-            routesMap[routeKey] = {
-              startLat: connectingTrip.coords[0],
-              startLng: startLng,
-              endLat: currentTrip.coords[0],
-              endLng: endLng,
-              color: '#60a5fa',
-              stroke: 2,
-              startCountry: connectingTrip.country,
-              endCountry: currentTrip.country,
-              trips: []
-            };
+            routesMap[routeKey] = createRoute(
+              connectingTrip.country, 
+              currentTrip.country, 
+              connectingTrip.coords, 
+              currentTrip.coords
+            );
           }
           
           // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
@@ -370,38 +426,15 @@ const UltraRealisticGlobe = () => {
         
         // 정확히 연결된 여행이지만, 다음 여행이 없으면 홈 국가와도 연결
         if (!hasFollowingTrip) {
-          const homeRouteKey = `${currentTrip.country}-${defaultCountry}`;
+          const homeRouteKey = getRouteKey(currentTrip.country, defaultCountry);
           
           if (!routesMap[homeRouteKey]) {
-            // 태평양 횡단 경로 처리
-            let startLng = currentTrip.coords[1];
-            let endLng = defaultCoords[1];
-            
-            // 경도 차이 계산
-            let lngDiff = endLng - startLng;
-            
-            // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
-            if (Math.abs(lngDiff) > 180) {
-              if (lngDiff > 0) {
-                // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
-                startLng = startLng + 360;
-              } else {
-                // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
-                endLng = endLng + 360;
-              }
-            }
-            
-            routesMap[homeRouteKey] = {
-              startLat: currentTrip.coords[0],
-              startLng: startLng,
-              endLat: defaultCoords[0],
-              endLng: endLng,
-              color: '#60a5fa',
-              stroke: 2,
-              startCountry: currentTrip.country,
-              endCountry: defaultCountry,
-              trips: []
-            };
+            routesMap[homeRouteKey] = createRoute(
+              currentTrip.country, 
+              defaultCountry, 
+              currentTrip.coords, 
+              defaultCoords
+            );
           }
           
           // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
@@ -415,38 +448,15 @@ const UltraRealisticGlobe = () => {
       // 2. 기간이 겹치는 여행들과 연결
       if (overlappingTrips.length > 0) {
         overlappingTrips.forEach(overlappingTrip => {
-          const routeKey = `${overlappingTrip.country}-${currentTrip.country}`;
+          const routeKey = getRouteKey(overlappingTrip.country, currentTrip.country);
           
           if (!routesMap[routeKey]) {
-            // 태평양 횡단 경로 처리
-            let startLng = overlappingTrip.coords[1];
-            let endLng = currentTrip.coords[1];
-            
-            // 경도 차이 계산
-            let lngDiff = endLng - startLng;
-            
-            // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
-            if (Math.abs(lngDiff) > 180) {
-              if (lngDiff > 0) {
-                // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
-                startLng = startLng + 360;
-              } else {
-                // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
-                endLng = endLng + 360;
-              }
-            }
-            
-            routesMap[routeKey] = {
-              startLat: overlappingTrip.coords[0],
-              startLng: startLng,
-              endLat: currentTrip.coords[0],
-              endLng: endLng,
-              color: '#60a5fa', // 겹치는 기간 경로도 파란색으로 통일
-              stroke: 2,
-              startCountry: overlappingTrip.country,
-              endCountry: currentTrip.country,
-              trips: []
-            };
+            routesMap[routeKey] = createRoute(
+              overlappingTrip.country, 
+              currentTrip.country, 
+              overlappingTrip.coords, 
+              currentTrip.coords
+            );
           }
           
           // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
@@ -460,38 +470,15 @@ const UltraRealisticGlobe = () => {
 
       // 3. 연결되는 여행이 없는 경우, 홈 국가와 연결
       if (!hasConnection) {
-        const routeKey = `${defaultCountry}-${currentTrip.country}`;
+        const routeKey = getRouteKey(defaultCountry, currentTrip.country);
         
         if (!routesMap[routeKey]) {
-          // 태평양 횡단 경로 처리
-          let startLng = defaultCoords[1];
-          let endLng = currentTrip.coords[1];
-          
-          // 경도 차이 계산
-          let lngDiff = endLng - startLng;
-          
-          // 태평양을 횡단하는 경우 처리 (경도 차이가 180도 이상인 경우)
-          if (Math.abs(lngDiff) > 180) {
-            if (lngDiff > 0) {
-              // 서쪽에서 동쪽으로 가는 경우 (예: 미국 -> 일본)
-              startLng = startLng + 360;
-            } else {
-              // 동쪽에서 서쪽으로 가는 경우 (예: 일본 -> 미국)
-              endLng = endLng + 360;
-            }
-          }
-          
-          routesMap[routeKey] = {
-            startLat: defaultCoords[0],
-            startLng: startLng,
-            endLat: currentTrip.coords[0],
-            endLng: endLng,
-            color: '#60a5fa',
-            stroke: 2,
-            startCountry: defaultCountry,
-            endCountry: currentTrip.country,
-            trips: []
-          };
+          routesMap[routeKey] = createRoute(
+            defaultCountry, 
+            currentTrip.country, 
+            defaultCoords, 
+            currentTrip.coords
+          );
         }
         
         // 여행 정보를 trips 배열에 추가 (최신 여행이 앞에 오도록)
@@ -664,11 +651,10 @@ const UltraRealisticGlobe = () => {
     setShowAddTravel(false);
   };
 
-  // 여행지 (도시별 여행) 삭제 함수
-  const deleteCityTrip = async (cityName, tripToDelete) => {
+  // 여행지 (도시별 여행) 삭제 함수 (모달에서 직접 삭제용)
+  const directDeleteCityTrip = async (countryEnglishName, tripToDelete) => {
     setUserTravelData(prev => {
       const newData = { ...prev };
-      const countryEnglishName = selectedCountry.country;
       const countryDataForDeletion = newData[countryEnglishName];
 
       if (countryDataForDeletion) {
@@ -680,9 +666,12 @@ const UltraRealisticGlobe = () => {
 
         if (updatedTrips.length === 0) {
           delete newData[countryEnglishName];
-          setSelectedCountry(null);
-          if (window.innerWidth <= 768) {
-            setShowGlobeControlsOnMobile(true);
+          // selectedCountry가 삭제된 국가와 같으면 null로 설정
+          if (selectedCountry && selectedCountry.country === countryEnglishName) {
+            setSelectedCountry(null);
+            if (window.innerWidth <= 768) {
+              setShowGlobeControlsOnMobile(true);
+            }
           }
         } else {
           const remainingCities = new Set();
@@ -701,20 +690,120 @@ const UltraRealisticGlobe = () => {
             lastVisit: latestEndDate,
           };
           
-          const style = getVisitStyle(updatedTrips.length);
-          setSelectedCountry({
-            ...newData[countryEnglishName],
-            country: countryEnglishName,
-            displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
-            color: style.color
-          });
+          // selectedCountry가 수정된 국가와 같으면 업데이트
+          if (selectedCountry && selectedCountry.country === countryEnglishName) {
+            const style = getVisitStyle(updatedTrips.length);
+            setSelectedCountry({
+              ...newData[countryEnglishName],
+              country: countryEnglishName,
+              displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
+              color: style.color
+            });
+          }
         }
       }
       return newData;
     });
 
     // Supabase에서 삭제
-    await deleteFromSupabase(selectedCountry.country, tripToDelete);
+    await deleteFromSupabase(countryEnglishName, tripToDelete);
+  };
+  
+  // 여행지 (도시별 여행) 삭제 함수 (모달 확인 후 삭제용)
+  const deleteCityTrip = async (cityName, tripToDelete) => {
+    // 삭제 데이터를 저장하고 확인 모달 열기
+    setDeleteTripData({ cityName, tripToDelete });
+    setShowDeleteConfirm(true);
+  };
+  
+  // 실제 삭제 수행 함수
+  const executeDeleteCityTrip = async () => {
+    if (!deleteTripData) return;
+    
+    const { cityName, tripToDelete } = deleteTripData;
+    
+    // tripToDelete에서 country 정보를 직접 가져오거나 찾기
+    let countryEnglishName = tripToDelete.country;
+    
+    // country 정보가 없으면 userTravelData에서 해당 여행을 찾아서 국가 확인
+    if (!countryEnglishName) {
+      for (const [country, data] of Object.entries(userTravelData)) {
+        const foundTrip = data.trips?.find(trip => 
+          trip.startDate === tripToDelete.startDate && 
+          trip.endDate === tripToDelete.endDate &&
+          JSON.stringify(trip.cities) === JSON.stringify(tripToDelete.cities)
+        );
+        if (foundTrip) {
+          countryEnglishName = country;
+          break;
+        }
+      }
+    }
+    
+    if (!countryEnglishName) {
+      console.error('국가 정보를 찾을 수 없습니다.');
+      setDeleteTripData(null);
+      setShowDeleteConfirm(false);
+      return;
+    }
+    setUserTravelData(prev => {
+      const newData = { ...prev };
+      const countryDataForDeletion = newData[countryEnglishName];
+
+      if (countryDataForDeletion) {
+        const updatedTrips = countryDataForDeletion.trips.filter(trip =>
+          !(trip.startDate === tripToDelete.startDate && 
+            trip.endDate === tripToDelete.endDate && 
+            JSON.stringify(trip.cities) === JSON.stringify(tripToDelete.cities))
+        );
+
+        if (updatedTrips.length === 0) {
+          delete newData[countryEnglishName];
+          // selectedCountry가 삭제된 국가와 같으면 null로 설정
+          if (selectedCountry && selectedCountry.country === countryEnglishName) {
+            setSelectedCountry(null);
+            if (window.innerWidth <= 768) {
+              setShowGlobeControlsOnMobile(true);
+            }
+          }
+        } else {
+          const remainingCities = new Set();
+          updatedTrips.forEach(trip => {
+            trip.cities.forEach(city => remainingCities.add(city));
+          });
+          
+          const allEndDates = updatedTrips.map(trip => new Date(trip.endDate));
+          const latestEndDate = allEndDates.length > 0 ? new Date(Math.max(...allEndDates)).toISOString().split('T')[0] : '';
+
+          newData[countryEnglishName] = {
+            ...countryDataForDeletion,
+            visits: updatedTrips.length,
+            cities: Array.from(remainingCities),
+            trips: updatedTrips,
+            lastVisit: latestEndDate,
+          };
+          
+          // selectedCountry가 수정된 국가와 같으면 업데이트
+          if (selectedCountry && selectedCountry.country === countryEnglishName) {
+            const style = getVisitStyle(updatedTrips.length);
+            setSelectedCountry({
+              ...newData[countryEnglishName],
+              country: countryEnglishName,
+              displayCountry: countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName,
+              color: style.color
+            });
+          }
+        }
+      }
+      return newData;
+    });
+
+    // Supabase에서 삭제
+    await deleteFromSupabase(countryEnglishName, tripToDelete);
+    
+    // 모달 닫기 및 데이터 초기화
+    setDeleteTripData(null);
+    setShowDeleteConfirm(false);
   };
 
   useEffect(() => {
@@ -1005,71 +1094,47 @@ const UltraRealisticGlobe = () => {
 
       <LoadingScreen isLoading={isLoading} loadingStatus={loadingStatus} />
 
-      {/* 로그인 버튼 및 사용자 정보 + 설정 버튼 */}
-      {window.innerWidth <= 768 ? (
-        // 모바일: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
-        <div className="absolute bottom-6 left-6 z-10 flex gap-2">
-          {user && !selectedLine && !selectedCountry ? (
-            <>
-              <button
-                onClick={handleSignOut}
-                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-              >
-                Sign Out
-              </button>
-              <button
-                onClick={() => setShowSettings(true)}
-                className="bg-slate-900/95 backdrop-blur-lg rounded-lg shadow-2xl px-3 py-2 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
-              >
-                ⚙️
-              </button>
-            </>
-          ) : (
-            !selectedLine && !selectedCountry && (
+      {/* 로그인/로그아웃 및 설정 버튼 */}
+      {/* 모바일과 데스크톱 공통: 왼쪽 하단에 로그인/로그아웃과 설정 버튼 */}
+      <div className="absolute bottom-6 left-6 z-10 flex gap-2">
+        {user && (!selectedLine || window.innerWidth > 768) && (!selectedCountry || window.innerWidth > 768) ? (
+          <>
             <button
-              onClick={() => setShowAuth(true)}
-              className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+              onClick={handleSignOut}
+              className={`bg-red-600/90 hover:bg-red-700/90 text-white font-medium transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-lg ${
+                window.innerWidth <= 768 
+                  ? 'px-3 py-2 rounded-lg text-xs' 
+                  : 'px-4 py-3 rounded-xl text-sm'
+              }`}
             >
-              Sign In
+              Sign Out
             </button>
-            )
-          )}
-        </div>
-      ) : (
-        // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
-        <>
-          <div className="absolute top-6 right-20 z-10">
-            {user && !selectedLine && !selectedCountry ? (
-              <button
-                onClick={handleSignOut}
-                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-              >
-                Sign Out
-              </button>
-            ) : (
-              !selectedLine && !selectedCountry && (
-              <button
-                onClick={() => setShowAuth(true)}
-                className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-              >
-                Sign In
-              </button>
-              )
-            )}
-          </div>
-          {/* 데스크톱: 왼쪽 하단에 설정 버튼 */}
-          {user && !selectedLine && !selectedCountry && (
-            <div className="absolute bottom-6 left-6 z-10">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl px-4 py-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all font-medium text-sm flex items-center gap-2"
-              >
-                ⚙️ 설정
-              </button>
-            </div>
-          )}
-        </>
-      )}
+            <button
+              onClick={() => setShowSettings(true)}
+              className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 text-white hover:bg-slate-800/95 transition-all ${
+                window.innerWidth <= 768 
+                  ? 'px-2 py-2 rounded-lg text-sm' 
+                  : 'px-4 py-3 rounded-2xl font-medium text-sm flex items-center gap-2'
+              }`}
+            >
+              {window.innerWidth <= 768 ? '⚙️' : '⚙️ 설정'}
+            </button>
+          </>
+        ) : (
+          (!selectedLine || window.innerWidth > 768) && (!selectedCountry || window.innerWidth > 768) && (
+          <button
+            onClick={() => setShowAuth(true)}
+            className={`bg-blue-600/90 hover:bg-blue-700/90 text-white font-medium transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-lg ${
+              window.innerWidth <= 768 
+                ? 'px-3 py-2 rounded-lg text-xs' 
+                : 'px-4 py-3 rounded-xl text-sm'
+            }`}
+          >
+            Sign In
+          </button>
+          )
+        )}
+      </div>
 
       <GlobeControls 
         globeMode={globeMode}
@@ -1131,6 +1196,8 @@ const UltraRealisticGlobe = () => {
         setShowAllTrips={setShowAllTrips}
         userTravelData={userTravelData}
         countryData={countryData}
+        setEditingTrip={setEditingTrip}
+        deleteCityTrip={directDeleteCityTrip}
       />
 
       <EditTravelModal 
@@ -1179,6 +1246,27 @@ const UltraRealisticGlobe = () => {
           </div>
         </div>
       )}
+      
+      {/* 여행 기록 삭제 확인 모달 */}
+      <ConfirmModal
+        show={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteTripData(null);
+        }}
+        onConfirm={executeDeleteCityTrip}
+        title="⚠️ 여행 기록 삭제"
+        message={
+          <div className="text-center">
+            이 여행 기록을 삭제하시겠습니까?
+            <br />
+            삭제된 데이터는 복구할 수 없습니다.
+          </div>
+        }
+        confirmText="삭제"
+        cancelText="취소"
+        isDestructive={true}
+      />
 
       <style>
         {`

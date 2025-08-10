@@ -36,12 +36,24 @@ const TravelStatsPanel = ({
 
   return (
     <div className="absolute top-6 right-6 z-10" ref={panelRef}>
-      <button 
-        onClick={() => setShowMobileStats(!showMobileStats)}
-        className="bg-slate-900/95 backdrop-blur-lg rounded-xl shadow-2xl p-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
-      >
-        🌍
-      </button>
+      <div className="flex gap-2">
+        {/* 여행지 추가 버튼 */}
+        <button
+          onClick={() => setShowAddTravel(true)}
+          className="bg-emerald-600/90 hover:bg-emerald-700/90 backdrop-blur-lg rounded-xl shadow-2xl px-3 py-3 border border-emerald-500/30 text-white transition-all font-medium text-sm"
+          title="여행지 추가"
+        >
+          ✈️ 여행지 추가
+        </button>
+        
+        {/* 통계 버튼 */}
+        <button 
+          onClick={() => setShowMobileStats(!showMobileStats)}
+          className="bg-slate-900/95 backdrop-blur-lg rounded-xl shadow-2xl px-3 py-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
+        >
+          🌍
+        </button>
+      </div>
       
       {showMobileStats && (
         <div className="absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 min-w-72">
@@ -89,7 +101,7 @@ const TravelStatsPanel = ({
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="text-center p-3 bg-gradient-to-br from-blue-600/20 to-blue-700/20 rounded-xl border border-blue-500/30">
               <div className="text-2xl font-bold text-blue-400">{stats.totalCountries}</div>
-              <div className="text-xs text-slate-400">방문 국가</div>
+              <div className="text-xs text-slate-400">방문 <br />국가</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-green-600/20 to-green-700/20 rounded-xl border border-green-500/30">
               <div className="text-2xl font-bold text-green-400">{stats.totalVisits}</div>
@@ -97,17 +109,11 @@ const TravelStatsPanel = ({
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-purple-600/20 to-purple-700/20 rounded-xl border border-purple-500/30">
               <div className="text-2xl font-bold text-purple-400">{stats.totalCities}</div>
-              <div className="text-xs text-slate-400">방문 도시</div>
+              <div className="text-xs text-slate-400">방문 <br />도시</div>
             </div>
           </div>
           
-          {/* 여행지 추가 버튼 */}
-          <button
-            onClick={() => setShowAddTravel(true)}
-            className="w-full mb-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm"
-          >
-            ✈️ 여행지 추가
-          </button>
+
           
           <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
             {Object.entries(userTravelData).map(([countryEnglishName, data]) => {

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { countryData } from '../data/countryData';
+import ConfirmModal from './ConfirmModal';
 
 export const AddTravelModal = ({ 
   showAddTravel, 
@@ -215,16 +216,16 @@ export const AddTravelModal = ({
         
         <div className="flex gap-3 mt-6">
           <button
-            onClick={handleAddTravel}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
-          >
-            추가
-          </button>
-          <button
             onClick={handleCloseModal}
             className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
           >
             취소
+          </button>
+          <button
+            onClick={handleAddTravel}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+          >
+            추가
           </button>
         </div>
       </div>
@@ -284,16 +285,16 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
         
         <div className="flex gap-3 mt-6">
           <button
-            onClick={updateTravelDestination}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
-          >
-            수정
-          </button>
-          <button
             onClick={() => setEditingTrip(null)}
             className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
           >
             취소
+          </button>
+          <button
+            onClick={updateTravelDestination}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+          >
+            수정
           </button>
         </div>
       </div>
@@ -301,7 +302,17 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
   );
 };
 
-export const AllTripsModal = ({ showAllTrips, setShowAllTrips, userTravelData, countryData }) => {
+export const AllTripsModal = ({ 
+  showAllTrips, 
+  setShowAllTrips, 
+  userTravelData, 
+  countryData,
+  setEditingTrip,
+  deleteCityTrip 
+}) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState(null);
+  
   if (!showAllTrips) return null;
 
   // 모든 여행을 시간순으로 정렬
@@ -369,7 +380,8 @@ export const AllTripsModal = ({ showAllTrips, setShowAllTrips, userTravelData, c
                 <div key={index} className="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 hover:border-blue-500/50 transition-all">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
                         <h3 className="text-lg font-semibold text-white">
                           {trip.koreanName} ({trip.country})
                         </h3>
@@ -377,18 +389,52 @@ export const AllTripsModal = ({ showAllTrips, setShowAllTrips, userTravelData, c
                           {calculateDays(trip.startDate, trip.endDate)}일
                         </span>
                       </div>
-                      <div className="text-slate-300 text-sm mb-2">
-                        📍 {trip.cities.join(' • ')}
+                      <div className="flex items-center gap-2">
+                        {/* 수정 버튼 */}
+                        <button
+                          onClick={() => {
+                            setEditingTrip({
+                              country: trip.country,
+                              cities: trip.cities,
+                              startDate: trip.startDate,
+                              endDate: trip.endDate,
+                              originalCities: trip.cities,
+                              originalStartDate: trip.startDate,
+                              originalEndDate: trip.endDate
+                            });
+                            setShowAllTrips(false);
+                          }}
+                          className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-2 py-1 rounded-lg text-xs transition-all"
+                          title="수정"
+                        >
+                          ✏️
+                        </button>
+                        
+                        {/* 삭제 버튼 */}
+                        <button
+                          onClick={() => {
+                            setTripToDelete(trip);
+                            setShowDeleteConfirm(true);
+                          }}
+                          className="bg-red-600/20 hover:bg-red-600/40 text-red-300 px-2 py-1 rounded-lg text-xs transition-all"
+                          title="삭제"
+                        >
+                          🗑️
+                        </button>
                       </div>
-                      <div className="text-slate-400 text-sm">
-                        📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}
-                      </div>
+                    </div>
+                    <div className="text-slate-300 text-sm mb-2">
+                    📍 {trip.cities.join(' • ')}
+                    </div>
+                    <div className="text-slate-400 text-sm">
+                    📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}
+                    </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-slate-500 text-xs">
-                        #{index + 1}
+                    <div className="text-slate-500 text-xs">
+                      #{index + 1}
                       </div>
-                    </div>
+                  </div>
                   </div>
                 </div>
               ))}
@@ -411,6 +457,36 @@ export const AllTripsModal = ({ showAllTrips, setShowAllTrips, userTravelData, c
           </div>
         )}
       </div>
+      
+      {/* 삭제 확인 모달 */}
+      <ConfirmModal
+        show={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (tripToDelete) {
+            // directDeleteCityTrip 함수 호출
+            await deleteCityTrip(tripToDelete.country, tripToDelete);
+          }
+          // 모달 닫기
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+          setShowAllTrips(false);
+        }}
+        title="⚠️ 여행 기록 삭제"
+        message={
+          <div className="text-center">
+            이 여행 기록을 삭제하시겠습니까?
+            <br />
+            삭제된 데이터는 복구할 수 없습니다.
+          </div>
+        }
+        confirmText="삭제"
+        cancelText="취소"
+        isDestructive={true}
+      />
     </div>
   );
 };
