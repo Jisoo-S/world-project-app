@@ -381,56 +381,47 @@ export const AllTripsModal = ({
                         <h3 className="text-lg font-semibold text-white">
                           {trip.koreanName} ({trip.country})
                         </h3>
-                        <span className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded-lg text-sm">
+                        {/* 수정/삭제 버튼 - Moved here to align with country name */}
+                        <div className="flex items-center gap-2 ml-auto"> {/* ml-auto pushes it to the right */}
+                          <button
+                            onClick={() => {
+                              setEditingTrip({
+                                country: trip.country,
+                                cities: trip.cities,
+                                startDate: trip.startDate,
+                                endDate: trip.endDate,
+                                originalCities: trip.cities,
+                                originalStartDate: trip.startDate,
+                                originalEndDate: trip.endDate
+                              });
+                            }}
+                            className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-2 py-1 rounded-lg text-xs transition-all"
+                            title="수정"
+                          >
+                            ✏️
+                          </button>
+
+                          <button
+                            onClick={() => deleteCityTrip(trip)}
+                            className="bg-red-600/20 hover:bg-red-600/40 text-red-300 px-2 py-1 rounded-lg text-xs transition-all"
+                            title="삭제"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-slate-300 text-sm mb-2 flex items-baseline">
+                        <span>📍 {trip.cities.join(' • ')}</span>
+                        <span className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded-lg text-xs ml-2">
                           {calculateDays(trip.startDate, trip.endDate)}일
                         </span>
                       </div>
-                      <div className="text-slate-300 text-sm mb-2">
-                        📍 {trip.cities.join(' • ')}
-                      </div>
                       <div className="text-slate-400 text-sm">
-                        📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}
+                        <span>📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}</span>
                       </div>
-                    </div>
-
-                    {/* 수정/삭제 버튼 */}
-                    <div
-                      className={`
-                        absolute
-                        ${isMobile ? 'top-2 right-4' : 'top-1/2 right-4 -translate-y-1/2'}
-                        flex items-center gap-2
-                      `}
-                    >
-                      <button
-                        onClick={() => {
-                          setEditingTrip({
-                            country: trip.country,
-                            cities: trip.cities,
-                            startDate: trip.startDate,
-                            endDate: trip.endDate,
-                            originalCities: trip.cities,
-                            originalStartDate: trip.startDate,
-                            originalEndDate: trip.endDate
-                          });
-                        }}
-                        className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-2 py-1 rounded-lg text-xs transition-all"
-                        title="수정"
-                      >
-                        ✏️
-                      </button>
-
-                      <button
-                        onClick={() => deleteCityTrip(trip)}
-                        className="bg-red-600/20 hover:bg-red-600/40 text-red-300 px-2 py-1 rounded-lg text-xs transition-all"
-                        title="삭제"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-
-                    {/* 번호 - 모바일/PC 위치 다르게 */}
-                    <div className="absolute bottom-2 sm:top-2 right-4 text-slate-500 text-xs">
-                      #{index + 1}
+                      <div className="w-full text-right text-slate-500 text-xs mt-1">
+                        #{index + 1}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -445,7 +436,7 @@ export const AllTripsModal = ({
         </div>
 
         {allTrips.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-slate-700">
+          <div className="mt-2 pt-2 border-t border-slate-700"> {/* Reduced mt and pt */}
             <div className="flex flex-wrap gap-6 text-sm text-slate-400">
               <div>
                 총 여행: <span className="text-blue-400 font-semibold">{allTrips.length}회</span>
