@@ -101,7 +101,7 @@ const TravelStatsPanel = ({
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="text-center p-3 bg-gradient-to-br from-green-600/20 to-green-700/20 rounded-xl border border-green-500/30">
               <div className="text-2xl font-bold text-green-400">{stats.totalVisits}</div>
-              <div className="text-xs text-slate-400">총 여행</div>
+              <div className="text-xs text-slate-400">총<br />여행</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-blue-600/20 to-blue-700/20 rounded-xl border border-blue-500/30">
               <div className="text-2xl font-bold text-blue-400">{stats.totalCountries}</div>
