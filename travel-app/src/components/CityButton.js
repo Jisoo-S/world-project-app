@@ -30,7 +30,7 @@ const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip, country }) 
                   ✏️
                 </button>
                 <button
-                  onClick={() => onDeleteCityTrip(city, trip)}
+                  onClick={() => onDeleteCityTrip({ ...trip, country: country })}
                   className="text-red-400 hover:text-red-600"
                   title="이 여행 삭제"
                 >

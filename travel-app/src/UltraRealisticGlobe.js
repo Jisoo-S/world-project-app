@@ -5,7 +5,7 @@ import LoadingScreen from './components/LoadingScreen';
 import TravelStatsPanel from './components/TravelStatsPanel';
 import GlobeControls from './components/GlobeControls';
 import SelectedCountryPanel from './components/SelectedCountryPanel';
-import { AddTravelModal, EditTravelModal, DateErrorModal, AllTripsModal } from './components/Modals';
+import { AddTravelModal, EditTravelModal, DateErrorModal, AllTripsModal, AlertDialog } from './components/Modals';
 import AuthModal from './components/AuthModal';
 import SettingsModal from './components/SettingsModal';
 import LineInfoPanel from './components/LineInfoPanel';
@@ -25,6 +25,15 @@ const UltraRealisticGlobe = () => {
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const [userTravelData, setUserTravelData] = useState({});
   const [showAddTravel, setShowAddTravel] = useState(false);
@@ -39,6 +48,8 @@ const UltraRealisticGlobe = () => {
   const [showContinentPanel, setShowContinentPanel] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
   const [showAllTrips, setShowAllTrips] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false); // New state
+  const [alertMessage, setAlertMessage] = useState(''); // New state
   const lineInfoRef = useRef(null);
   
   // 인증 관련 상태
@@ -67,6 +78,27 @@ const UltraRealisticGlobe = () => {
       };
     }
   }, [selectedLine]);
+
+  useEffect(() => {
+    if (selectedCountry) {
+      setShowMobileStats(false);
+      setShowAllTrips(false);
+    }
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    if (showMobileStats) {
+      setSelectedCountry(null);
+      setShowAllTrips(false);
+    }
+  }, [showMobileStats]);
+
+  useEffect(() => {
+    if (showAllTrips) {
+      setSelectedCountry(null);
+      setShowMobileStats(false);
+    }
+  }, [showAllTrips]);
 
   // 사용자 세션 확인 및 데이터 로드
   useEffect(() => {
@@ -581,7 +613,8 @@ const UltraRealisticGlobe = () => {
   // 여행지 추가 함수
   const addTravelDestination = async () => {
     if (!newTravelData.country || !newTravelData.cities || !newTravelData.startDate || !newTravelData.endDate) {
-      alert('모든 필드를 입력해주세요.');
+      setShowAlertModal(true);
+      setAlertMessage('모든 필드를 입력해주세요.');
       return;
     }
 
@@ -710,9 +743,9 @@ const UltraRealisticGlobe = () => {
   };
   
   // 여행지 (도시별 여행) 삭제 함수 (모달 확인 후 삭제용)
-  const deleteCityTrip = async (cityName, tripToDelete) => {
+  const deleteCityTrip = async (tripToDelete) => {
     // 삭제 데이터를 저장하고 확인 모달 열기
-    setDeleteTripData({ cityName, tripToDelete });
+    setDeleteTripData({ tripToDelete });
     setShowDeleteConfirm(true);
   };
   
@@ -720,25 +753,8 @@ const UltraRealisticGlobe = () => {
   const executeDeleteCityTrip = async () => {
     if (!deleteTripData) return;
     
-    const { cityName, tripToDelete } = deleteTripData;
-    
-    // tripToDelete에서 country 정보를 직접 가져오거나 찾기
-    let countryEnglishName = tripToDelete.country;
-    
-    // country 정보가 없으면 userTravelData에서 해당 여행을 찾아서 국가 확인
-    if (!countryEnglishName) {
-      for (const [country, data] of Object.entries(userTravelData)) {
-        const foundTrip = data.trips?.find(trip => 
-          trip.startDate === tripToDelete.startDate && 
-          trip.endDate === tripToDelete.endDate &&
-          JSON.stringify(trip.cities) === JSON.stringify(tripToDelete.cities)
-        );
-        if (foundTrip) {
-          countryEnglishName = country;
-          break;
-        }
-      }
-    }
+    const { tripToDelete } = deleteTripData;
+    const countryEnglishName = tripToDelete.country;
     
     if (!countryEnglishName) {
       console.error('국가 정보를 찾을 수 없습니다.');
@@ -922,6 +938,7 @@ const UltraRealisticGlobe = () => {
             setSelectedLine(arc);
             setSelectedCountry(null);
             setSelectedLineIndex(0);
+            setShowMobileStats(false); // Add this line
           });
 
         if (!mounted) return;
@@ -1197,7 +1214,8 @@ const UltraRealisticGlobe = () => {
         userTravelData={userTravelData}
         countryData={countryData}
         setEditingTrip={setEditingTrip}
-        deleteCityTrip={directDeleteCityTrip}
+        deleteCityTrip={deleteCityTrip}
+        isMobile={isMobile}
       />
 
       <EditTravelModal 
@@ -1257,15 +1275,36 @@ const UltraRealisticGlobe = () => {
         onConfirm={executeDeleteCityTrip}
         title="⚠️ 여행 기록 삭제"
         message={
-          <div className="text-center">
-            이 여행 기록을 삭제하시겠습니까?
-            <br />
-            삭제된 데이터는 복구할 수 없습니다.
-          </div>
+          deleteTripData ? (
+            <div className="text-center text-white">
+              <p className="font-bold text-lg mb-2 text-blue-400">
+                {(countryData[deleteTripData.tripToDelete.country]?.koreanName || deleteTripData.tripToDelete.country || '알 수 없는 국가')} ({deleteTripData.tripToDelete.country})
+              </p>
+              <p className="text-sm text-slate-300 mb-1">
+                📍 {(deleteTripData.tripToDelete.cities || []).join(', ')}
+              </p>
+              <p className="text-sm text-slate-400">
+                📅 {(deleteTripData.tripToDelete.startDate || '날짜 미정')} ~ {(deleteTripData.tripToDelete.endDate || '날짜 미정')}
+              </p>
+              <p className="mt-4">이 여행 기록을 삭제하시겠습니까?<br />삭제된 데이터는 복구할 수 없습니다.</p>
+            </div>
+          ) : (
+            <div className="text-center">
+              이 여행 기록을 삭제하시겠습니까?
+              <br />
+              삭제된 데이터는 복구할 수 없습니다.
+            </div>
+          )
         }
         confirmText="삭제"
         cancelText="취소"
         isDestructive={true}
+      />
+
+      <AlertDialog
+        show={showAlertModal}
+        message={alertMessage}
+        onClose={() => setShowAlertModal(false)}
       />
 
       <style>

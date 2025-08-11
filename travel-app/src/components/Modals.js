@@ -302,20 +302,17 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
   );
 };
 
-export const AllTripsModal = ({ 
-  showAllTrips, 
-  setShowAllTrips, 
-  userTravelData, 
+export const AllTripsModal = ({
+  showAllTrips,
+  setShowAllTrips,
+  userTravelData,
   countryData,
   setEditingTrip,
-  deleteCityTrip 
+  deleteCityTrip,
+  isMobile
 }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [tripToDelete, setTripToDelete] = useState(null);
-  
   if (!showAllTrips) return null;
 
-  // 모든 여행을 시간순으로 정렬
   const allTrips = [];
   Object.entries(userTravelData).forEach(([countryEnglishName, data]) => {
     data.trips.forEach(trip => {
@@ -329,10 +326,8 @@ export const AllTripsModal = ({
     });
   });
 
-  // 시작 날짜순으로 정렬
-  allTrips.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  allTrips.sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
 
-  // 날짜 포맷 함수
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
@@ -342,7 +337,6 @@ export const AllTripsModal = ({
     });
   };
 
-  // 여행 기간 계산 함수
   const calculateDays = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -352,7 +346,7 @@ export const AllTripsModal = ({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -360,7 +354,7 @@ export const AllTripsModal = ({
         }
       }}
     >
-      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-white font-bold text-2xl flex items-center gap-2">
             🌍 전체 여행 기록
@@ -372,16 +366,18 @@ export const AllTripsModal = ({
             ×
           </button>
         </div>
-        
+
         <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
           {allTrips.length > 0 ? (
             <div className="space-y-4">
               {allTrips.map((trip, index) => (
-                <div key={index} className="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 hover:border-blue-500/50 transition-all">
+                <div
+                  key={index}
+                  className="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 hover:border-blue-500/50 transition-all relative"
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <h3 className="text-lg font-semibold text-white">
                           {trip.koreanName} ({trip.country})
                         </h3>
@@ -389,52 +385,53 @@ export const AllTripsModal = ({
                           {calculateDays(trip.startDate, trip.endDate)}일
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {/* 수정 버튼 */}
-                        <button
-                          onClick={() => {
-                            setEditingTrip({
-                              country: trip.country,
-                              cities: trip.cities,
-                              startDate: trip.startDate,
-                              endDate: trip.endDate,
-                              originalCities: trip.cities,
-                              originalStartDate: trip.startDate,
-                              originalEndDate: trip.endDate
-                            });
-                            setShowAllTrips(false);
-                          }}
-                          className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-2 py-1 rounded-lg text-xs transition-all"
-                          title="수정"
-                        >
-                          ✏️
-                        </button>
-                        
-                        {/* 삭제 버튼 */}
-                        <button
-                          onClick={() => {
-                            setTripToDelete(trip);
-                            setShowDeleteConfirm(true);
-                          }}
-                          className="bg-red-600/20 hover:bg-red-600/40 text-red-300 px-2 py-1 rounded-lg text-xs transition-all"
-                          title="삭제"
-                        >
-                          🗑️
-                        </button>
+                      <div className="text-slate-300 text-sm mb-2">
+                        📍 {trip.cities.join(' • ')}
+                      </div>
+                      <div className="text-slate-400 text-sm">
+                        📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}
                       </div>
                     </div>
-                    <div className="text-slate-300 text-sm mb-2">
-                    📍 {trip.cities.join(' • ')}
+
+                    {/* 수정/삭제 버튼 */}
+                    <div
+                      className={`
+                        absolute
+                        ${isMobile ? 'top-2 right-4' : 'top-1/2 right-4 -translate-y-1/2'}
+                        flex items-center gap-2
+                      `}
+                    >
+                      <button
+                        onClick={() => {
+                          setEditingTrip({
+                            country: trip.country,
+                            cities: trip.cities,
+                            startDate: trip.startDate,
+                            endDate: trip.endDate,
+                            originalCities: trip.cities,
+                            originalStartDate: trip.startDate,
+                            originalEndDate: trip.endDate
+                          });
+                        }}
+                        className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-2 py-1 rounded-lg text-xs transition-all"
+                        title="수정"
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        onClick={() => deleteCityTrip(trip)}
+                        className="bg-red-600/20 hover:bg-red-600/40 text-red-300 px-2 py-1 rounded-lg text-xs transition-all"
+                        title="삭제"
+                      >
+                        🗑️
+                      </button>
                     </div>
-                    <div className="text-slate-400 text-sm">
-                    📅 {formatDate(trip.startDate)} ~ {formatDate(trip.endDate)}
-                    </div>
-                    </div>
-                    <div className="text-right">
-                    <div className="text-slate-500 text-xs">
+
+                    {/* 번호 - 모바일/PC 위치 다르게 */}
+                    <div className="absolute bottom-2 sm:top-2 right-4 text-slate-500 text-xs">
                       #{index + 1}
-                      </div>
-                  </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -446,50 +443,30 @@ export const AllTripsModal = ({
             </div>
           )}
         </div>
-        
+
         {allTrips.length > 0 && (
           <div className="mt-4 pt-3 border-t border-slate-700">
             <div className="flex flex-wrap gap-6 text-sm text-slate-400">
-              <div>총 여행: <span className="text-blue-400 font-semibold">{allTrips.length}회</span></div>
-              <div>총 국가: <span className="text-green-400 font-semibold">{Object.keys(userTravelData).length}개국</span></div>
-              <div>총 도시: <span className="text-purple-400 font-semibold">{Object.values(userTravelData).reduce((sum, data) => sum + data.cities.length, 0)}개</span></div>
+              <div>
+                총 여행: <span className="text-blue-400 font-semibold">{allTrips.length}회</span>
+              </div>
+              <div>
+                총 국가: <span className="text-green-400 font-semibold">{Object.keys(userTravelData).length}개국</span>
+              </div>
+              <div>
+                총 도시:{' '}
+                <span className="text-purple-400 font-semibold">
+                  {Object.values(userTravelData).reduce((sum, data) => sum + data.cities.length, 0)}개
+                </span>
+              </div>
             </div>
           </div>
         )}
       </div>
-      
-      {/* 삭제 확인 모달 */}
-      <ConfirmModal
-        show={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setTripToDelete(null);
-        }}
-        onConfirm={async () => {
-          if (tripToDelete) {
-            // directDeleteCityTrip 함수 호출
-            await deleteCityTrip(tripToDelete.country, tripToDelete);
-          }
-          // 모달 닫기
-          setShowDeleteConfirm(false);
-          setTripToDelete(null);
-          setShowAllTrips(false);
-        }}
-        title="⚠️ 여행 기록 삭제"
-        message={
-          <div className="text-center">
-            이 여행 기록을 삭제하시겠습니까?
-            <br />
-            삭제된 데이터는 복구할 수 없습니다.
-          </div>
-        }
-        confirmText="삭제"
-        cancelText="취소"
-        isDestructive={true}
-      />
     </div>
   );
 };
+
 
 export const DateErrorModal = ({ showDateErrorModal, setShowDateErrorModal }) => {
   if (!showDateErrorModal) return null;
@@ -508,6 +485,32 @@ export const DateErrorModal = ({ showDateErrorModal, setShowDateErrorModal }) =>
         <p className="text-white text-md mb-6">시작일은 종료일보다 빠르거나 같아야 합니다.</p>
         <button
           onClick={() => setShowDateErrorModal(false)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export const AlertDialog = ({ show, message, onClose }) => {
+  if (!show) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-sm w-full mx-4 text-center">
+        <h3 className="text-yellow-400 font-bold text-xl mb-4">⚠️ 알림</h3>
+        <p className="text-white text-md mb-6">{message}</p>
+        <button
+          onClick={onClose}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold"
         >
           확인
