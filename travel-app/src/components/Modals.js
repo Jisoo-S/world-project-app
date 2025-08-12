@@ -377,8 +377,10 @@ export const AllTripsModal = ({
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={(e) => {
-        // 배경 클릭 방지 - 모달 내부를 클릭할 때만 닫히도록 설정
-        e.stopPropagation();
+        // 배경 클릭 시 모달 닫기
+        if (e.target === e.currentTarget) {
+          setShowAllTrips(false);
+        }
       }}
     >
       <div 
