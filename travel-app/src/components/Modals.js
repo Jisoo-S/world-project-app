@@ -348,13 +348,16 @@ export const AllTripsModal = ({
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      style={{ pointerEvents: 'all' }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setShowAllTrips(false);
-        }
+        // 배경 클릭 방지 - 모달 내부를 클릭할 때만 닫히도록 설정
+        e.stopPropagation();
       }}
     >
-      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden">
+      <div 
+        className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-white font-bold text-2xl flex items-center gap-2">
             🌍 전체 여행 기록

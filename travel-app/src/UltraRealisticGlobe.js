@@ -1106,7 +1106,10 @@ const UltraRealisticGlobe = () => {
   const stats = getTravelStats();
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-black">
+    <div 
+      className="relative w-screen h-screen overflow-hidden bg-black"
+      style={{ pointerEvents: showAllTrips ? 'none' : 'all' }}
+    >
       <div ref={containerRef} className="w-full h-full" />
 
       <LoadingScreen isLoading={isLoading} loadingStatus={loadingStatus} />
