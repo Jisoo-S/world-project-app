@@ -311,6 +311,34 @@ export const AllTripsModal = ({
   deleteCityTrip,
   isMobile
 }) => {
+  // 배경 스크롤 차단을 위한 useEffect 추가
+  useEffect(() => {
+    if (showAllTrips) {
+      // 배경 스크롤 차단 함수 - 모달 내부가 아닌 경우만 차단
+      const preventBackgroundScroll = (e) => {
+        // 모달 내부 요소인지 확인
+        const modalContent = document.querySelector('.modal-scroll-container');
+        if (modalContent && !modalContent.contains(e.target)) {
+          e.preventDefault();
+        }
+      };
+      
+      // passive: false로 이벤트 리스너 등록
+      document.addEventListener('wheel', preventBackgroundScroll, { passive: false });
+      document.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
+      
+      // body 스크롤도 차단
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // 정리
+        document.removeEventListener('wheel', preventBackgroundScroll);
+        document.removeEventListener('touchmove', preventBackgroundScroll);
+        document.body.style.overflow = 'auto';
+      };
+    }
+  }, [showAllTrips]);
+
   if (!showAllTrips) return null;
 
   const allTrips = [];
@@ -348,14 +376,13 @@ export const AllTripsModal = ({
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-      style={{ pointerEvents: 'all' }}
       onClick={(e) => {
         // 배경 클릭 방지 - 모달 내부를 클릭할 때만 닫히도록 설정
         e.stopPropagation();
       }}
     >
       <div 
-        className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden"
+        className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden modal-scroll-container"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">

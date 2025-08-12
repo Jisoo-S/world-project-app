@@ -81,7 +81,7 @@ const SelectedCountryPanel = ({
         
         <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
           <div className="text-slate-400 text-sm mb-2">방문 도시 (클릭하면 여행 기간 표시)</div>
-          <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
+          <div className="max-h-48 overflow-y-auto custom-scrollbar-right space-y-2">
             {selectedCountry.cities.map((city, index) => {
               const cityTrips = (selectedCountry.trips || []).filter(trip => trip.cities.includes(city));
               return (

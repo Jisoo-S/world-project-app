@@ -30,7 +30,7 @@ const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip, country }) 
           {sortedCityTrips.map((trip, tripIndex) => (
             <div key={tripIndex} className="flex flex-col items-start justify-between text-xs text-slate-300">
               <div className="flex items-center justify-between w-full">
-                <span className="flex-grow">{trip.startDate} ~ {trip.endDate} ({calculateDays(trip.startDate, trip.endDate)}일)</span>
+                <span className="flex-grow">{trip.startDate} ~ {trip.endDate}</span>
                 <div className="flex gap-1 items-center"> {/* Added items-center for vertical alignment */}
                   <button
                     onClick={() => onEditTrip(trip, country)}

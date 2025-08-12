@@ -1108,7 +1108,6 @@ const UltraRealisticGlobe = () => {
   return (
     <div 
       className="relative w-screen h-screen overflow-hidden bg-black"
-      style={{ pointerEvents: showAllTrips ? 'none' : 'all' }}
     >
       <div ref={containerRef} className="w-full h-full" />
 
@@ -1325,6 +1324,26 @@ const UltraRealisticGlobe = () => {
           }
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(148, 163, 184, 0.8);
+          }
+          
+          .custom-scrollbar-right {
+            padding-right: 8px;
+          }
+          .custom-scrollbar-right::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar-right::-webkit-scrollbar-track {
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 4px;
+            margin: 2px;
+          }
+          .custom-scrollbar-right::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.7);
+            border-radius: 4px;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+          }
+          .custom-scrollbar-right::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.9);
           }
         `}
       </style>
