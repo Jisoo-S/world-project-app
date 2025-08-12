@@ -16,7 +16,12 @@ const GlobeControls = ({
   selectedCountry
 }) => {
   const isMobile = window.innerWidth <= 768;
-  const isSmallMobile = window.innerWidth <= 390; // iPhone 12 Pro 사이즈
+  const isLandscape = window.innerHeight < window.innerWidth;
+  const isMobileLandscape = isMobile && isLandscape;
+  // 아이폰 프로맥스 등 큰 모바일 기기 감지
+  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 950 && isLandscape && 'ontouchstart' in window;
+  // 전체 모바일 감지 (작은 모바일 + 큰 모바일)
+  const isAnyMobile = isMobile || isLargeMobileLandscape;
   const continentPanelRef = useRef(null);
 
   // 외부 클릭 감지 (모바일 대륙 패널)
@@ -77,17 +82,21 @@ const GlobeControls = ({
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isMobile 
-            ? 'rounded-xl p-2.5 w-24' 
-            : 'rounded-2xl p-4 w-40'
+            ? isMobileLandscape 
+              ? 'rounded-xl p-2.5 w-24 mobile-landscape-mode-box' 
+              : 'rounded-xl p-2.5 w-24'
+            : isLargeMobileLandscape
+              ? 'rounded-xl p-2.5 w-24 iphone-pro-landscape-mode-box'
+              : 'rounded-2xl p-4 w-40'
         }`}>
           <div className={`text-white font-medium mb-2 ${
-            isMobile ? 'text-xs' : 'text-sm font-bold mb-3'
+            isAnyMobile ? 'text-xs' : 'text-sm font-bold mb-3'
           }`}>👀 모드</div>
           <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
             <button
               onClick={() => changeGlobeMode('satellite')}
               className={`w-full font-medium transition-all ${
-                isMobile 
+                isAnyMobile 
                   ? 'px-1.5 py-1 rounded-md text-xs' 
                   : 'px-3 py-1.5 rounded-lg text-xs'
               } ${
@@ -101,7 +110,7 @@ const GlobeControls = ({
             <button
               onClick={() => changeGlobeMode('night')}
               className={`w-full font-medium transition-all ${
-                isMobile 
+                isAnyMobile 
                   ? 'px-1.5 py-1 rounded-md text-xs' 
                   : 'px-3 py-1.5 rounded-lg text-xs'
               } ${
@@ -115,7 +124,7 @@ const GlobeControls = ({
             <button
               onClick={() => changeGlobeMode('topographic')}
               className={`w-full font-medium transition-all ${
-                isMobile 
+                isAnyMobile 
                   ? 'px-1.5 py-1 rounded-md text-xs' 
                   : 'px-3 py-1.5 rounded-lg text-xs'
               } ${
@@ -130,7 +139,7 @@ const GlobeControls = ({
           
           {/* 줌 컨트롤 버튼들을 모드 박스 안에 */}
           <div className={`flex flex-row gap-1 items-center justify-center ${
-            isMobile ? 'mt-2' : 'mt-3'
+            isAnyMobile ? 'mt-2' : 'mt-3'
           }`}>
             <button
               onClick={() => {
@@ -147,7 +156,7 @@ const GlobeControls = ({
                 }
               }}
               className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
-                isMobile ? 'h-6 text-xs' : 'h-8 text-sm'
+                isAnyMobile ? 'h-6 text-xs' : 'h-8 text-sm'
               }`}
             >
               +
@@ -167,7 +176,7 @@ const GlobeControls = ({
                 }
               }}
               className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
-                isMobile ? 'h-6 text-xs' : 'h-8 text-sm'
+                isAnyMobile ? 'h-6 text-xs' : 'h-8 text-sm'
               }`}
             >
               -
@@ -177,7 +186,7 @@ const GlobeControls = ({
       </div>
 
       {/* 컨트롤 패널 */}
-      {isMobile ? (
+      {isAnyMobile ? (
         (selectedLine || selectedCountry) ? null : (
           <div className="absolute bottom-6 right-6 z-10" ref={continentPanelRef}>
             <button
@@ -187,15 +196,31 @@ const GlobeControls = ({
               ▶️
             </button>
             {showContinentPanel && (
-              <div className="absolute bottom-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4">
-                <div className="flex flex-col gap-4">
+              <div className={`absolute bottom-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4 ${
+                isMobileLandscape 
+                  ? 'mobile-landscape-control-panel' 
+                  : isLargeMobileLandscape 
+                    ? 'iphone-pro-landscape-control-panel'
+                    : ''
+              }`}>
+                <div className={`flex gap-4 ${
+                  (isMobileLandscape || isLargeMobileLandscape) 
+                    ? 'flex-row mobile-landscape-controls' 
+                    : 'flex-col'
+                }`}>
                   {/* 빠른 이동 - 대륙별 */}
                   <div>
                     <div className="text-white font-medium text-sm mb-2 flex items-center gap-2">
                       <span className="text-base">🚀</span>
                       <span>대륙별 이동</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className={`grid grid-cols-3 gap-2 ${
+                      isMobileLandscape 
+                        ? 'mobile-landscape-continent-grid' 
+                        : isLargeMobileLandscape 
+                          ? 'iphone-pro-landscape-continent-grid'
+                          : ''
+                    }`}>
                       {continents.map(({continent, flag, countries, description}) => (
                         <button
                           key={continent}
@@ -215,7 +240,13 @@ const GlobeControls = ({
                       <span className="text-base">🎮</span>
                       <span>지구본 조작</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className={`flex gap-2 ${
+                      isMobileLandscape 
+                        ? 'mobile-landscape-globe-controls' 
+                        : isLargeMobileLandscape 
+                          ? 'iphone-pro-landscape-globe-controls'
+                          : ''
+                    }`}>
                       <button 
                         onClick={resetView}
                         className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"

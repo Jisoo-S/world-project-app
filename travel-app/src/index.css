@@ -51,6 +51,204 @@ code {
   }
 }
 
+/* 모바일 가로 모드 최적화 */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* 모바일 가로 모드에서 모든 모달창들을 화면 비율에 맞게 조정 */
+  .mobile-landscape-modal {
+    max-height: 85vh !important;
+    max-width: 90vw !important;
+    width: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  /* 설정 모달 가로 모드 최적화 */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS 전용: 설정 모달 크기 조정 */
+    .mobile-landscape-modal {
+      max-height: 80vh !important;
+      max-width: 85vw !important;
+    }
+  }
+  
+  /* 여행지 추가/수정 모달 가로 모드 최적화 */
+  .mobile-landscape-add-modal {
+    max-height: 80vh !important;
+    max-width: 85vw !important;
+    width: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  /* 전체 여행 기록 모달 가로 모드 최적화 */
+  .mobile-landscape-trips-modal {
+    max-height: 85vh !important;
+    max-width: 90vw !important;
+    width: auto !important;
+  }
+  
+  /* 국가 패널 가로 모드 최적화 */
+  .mobile-landscape-country-panel {
+    max-height: 80vh !important;
+    max-width: 85vw !important;
+    width: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  /* 모바일 가로 모드에서 도시 목록 스크롤 영역 - 박스 크기 고정 */
+  .mobile-landscape-cities {
+    max-height: 120px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border: 1px solid rgba(71, 85, 105, 0.5) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* 모바일 가로 모드에서 통계 패널 크기 조정 */
+  .mobile-landscape-stats {
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+  }
+  
+  /* 모바일 가로 모드에서 컨트롤 패널 가로 배치 */
+  .mobile-landscape-controls {
+    flex-direction: row !important;
+    gap: 1rem !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+  }
+  
+  /* 모바일 가로 모드에서 대륙별 이동과 지구본 조작을 가로로 배치 */
+  .mobile-landscape-controls > div {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  
+  /* 모바일 가로 모드에서 모드 박스 크기 유지 (세로 버전과 동일) */
+  .mobile-landscape-mode-box {
+    width: 6rem !important; /* 모바일 세로 버전과 동일한 크기 유지 */
+    max-width: 6rem !important;
+  }
+  
+  /* 모바일 가로 모드에서 컨트롤 패널 위치 조정 */
+  .mobile-landscape-control-panel {
+    width: auto !important;
+    min-width: 280px !important;
+    max-width: 350px !important;
+  }
+  
+  /* 모바일 가로 모드에서 대륙 버튼 그리드 조정 */
+  .mobile-landscape-continent-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* 모바일 가로 모드에서 지구본 조작 버튼 간격 조정 */
+  .mobile-landscape-globe-controls {
+    gap: 0.5rem !important;
+  }
+  
+  /* 여행 통계창 크기 고정 */
+  .mobile-landscape-stats-fixed {
+    width: 300px !important;
+    max-width: 300px !important;
+    height: auto !important;
+    max-height: 70vh !important;
+  }
+  
+  /* 여행 통계창 내부 스크롤 영역 */
+  .mobile-landscape-stats-scroll {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* 국가창 크기 고정 */
+  .mobile-landscape-country-fixed {
+    width: 350px !important;
+    max-width: 85vw !important;
+    max-height: 75vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* 아이폰 프로/프로맥스 등 큰 모바일 기기 전용 가로 모드 최적화 */
+@media (min-width: 769px) and (max-width: 950px) and (orientation: landscape) and (pointer: coarse) {
+  /* 터치 디바이스이면서 가로 모드인 경우에만 적용 */
+  .iphone-pro-landscape-modal {
+    max-height: 80vh !important;
+    max-width: 85vw !important;
+    width: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  .iphone-pro-landscape-stats-fixed {
+    width: 300px !important;
+    max-width: 300px !important;
+    height: auto !important;
+    max-height: 70vh !important;
+  }
+  
+  .iphone-pro-landscape-stats-scroll {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  .iphone-pro-landscape-country-fixed {
+    width: 350px !important;
+    max-width: 85vw !important;
+    max-height: 75vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .iphone-pro-landscape-cities {
+    max-height: 120px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border: 1px solid rgba(71, 85, 105, 0.5) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .iphone-pro-landscape-controls {
+    flex-direction: row !important;
+    gap: 1rem !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+  }
+  
+  .iphone-pro-landscape-controls > div {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  
+  .iphone-pro-landscape-mode-box {
+    width: 6rem !important;
+    max-width: 6rem !important;
+  }
+  
+  .iphone-pro-landscape-control-panel {
+    width: auto !important;
+    min-width: 280px !important;
+    max-width: 350px !important;
+  }
+  
+  .iphone-pro-landscape-continent-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  
+  .iphone-pro-landscape-globe-controls {
+    gap: 0.5rem !important;
+  }
+}
+
 /* 모바일 키보드가 열렸을 때 화면 조정 */
 @supports (-webkit-touch-callout: none) {
   /* iOS 전용 */

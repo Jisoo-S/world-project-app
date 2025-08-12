@@ -125,7 +125,11 @@ export const AddTravelModal = ({
         }
       }}
     >
-      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4">
+      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 ${
+        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : 
+        (window.innerWidth > 768 && window.innerWidth <= 950 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
+        ''
+      }`}>
         <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 추가</h2>
         
         <div className="space-y-4">
@@ -245,7 +249,11 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
         }
       }}
     >
-      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4">
+      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 ${
+        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : 
+        (window.innerWidth > 768 && window.innerWidth <= 950 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
+        ''
+      }`}>
         <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 수정</h2>
         
         <div className="space-y-4">
@@ -384,7 +392,11 @@ export const AllTripsModal = ({
       }}
     >
       <div 
-        className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden modal-scroll-container"
+        className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden modal-scroll-container ${
+          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-trips-modal' : 
+          (window.innerWidth > 768 && window.innerWidth <= 950 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
+          ''
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">

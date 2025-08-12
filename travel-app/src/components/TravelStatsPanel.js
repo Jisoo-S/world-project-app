@@ -16,6 +16,10 @@ const TravelStatsPanel = ({
 }) => {
   const [showLegend, setShowLegend] = useState(false);
   const isMobile = window.innerWidth <= 768;
+  const isLandscape = window.innerHeight < window.innerWidth;
+  const isMobileLandscape = isMobile && isLandscape;
+  // 아이폰 프로맥스 등 큰 모바일 기기 감지
+  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 950 && isLandscape && 'ontouchstart' in window;
   const panelRef = useRef(null);
 
   // 외부 클릭 감지
@@ -56,7 +60,13 @@ const TravelStatsPanel = ({
       </div>
       
       {showMobileStats && (
-        <div className="absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 min-w-72">
+        <div className={`absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 ${
+          isMobileLandscape 
+            ? 'mobile-landscape-stats-fixed overflow-y-auto' 
+            : isLargeMobileLandscape 
+              ? 'iphone-pro-landscape-stats-fixed overflow-y-auto'
+              : 'min-w-72 max-h-[80vh] overflow-y-auto'
+        } p-6`}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold text-lg">📊 여행 통계</h3>
             <div className="flex items-center gap-2">
@@ -115,7 +125,13 @@ const TravelStatsPanel = ({
           
 
           
-          <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+          <div className={`space-y-2 overflow-y-auto custom-scrollbar ${
+            isMobileLandscape 
+              ? 'max-h-32' 
+              : isLargeMobileLandscape 
+                ? 'max-h-32'
+                : 'max-h-48'
+          }`}>
             {Object.entries(userTravelData).map(([countryEnglishName, data]) => {
               const style = getVisitStyle(data.visits);
               const displayCountryName = countryData[countryEnglishName] ? `${countryData[countryEnglishName].koreanName} (${countryEnglishName})` : countryEnglishName;

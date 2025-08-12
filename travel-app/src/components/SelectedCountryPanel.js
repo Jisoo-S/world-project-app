@@ -10,6 +10,10 @@ const SelectedCountryPanel = ({
   editingTrip  // editingTrip prop 추가
 }) => {
   const isMobile = window.innerWidth <= 768;
+  const isLandscape = window.innerHeight < window.innerWidth;
+  const isMobileLandscape = isMobile && isLandscape;
+  // 아이폰 프로맥스 등 큰 모바일 기기 감지
+  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 950 && isLandscape && 'ontouchstart' in window;
   const panelRef = useRef(null);
 
   // 외부 클릭 감지
@@ -41,6 +45,12 @@ const SelectedCountryPanel = ({
       ref={panelRef}
       className={`absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 z-10 ${
         isMobile ? 'w-[calc(100%-2rem)]' : 'min-w-96 max-w-lg'
+      } ${
+        isMobileLandscape 
+          ? 'mobile-landscape-country-fixed' 
+          : isLargeMobileLandscape 
+            ? 'iphone-pro-landscape-country-fixed'
+            : ''
       }`}
     >
       <button 
@@ -62,10 +72,12 @@ const SelectedCountryPanel = ({
       >
         ×
       </button>
-      <h3 className="text-white font-bold text-xl mb-4 border-b border-slate-700 pb-2">
+      <h3 className="text-white font-bold text-xl mb-4 border-b border-slate-700 pb-2 flex-shrink-0">
         🌍 {selectedCountry.displayCountry}
       </h3>
-      <div className="space-y-4">
+      <div className={`space-y-4 ${
+        (isMobileLandscape || isLargeMobileLandscape) ? 'flex-1 overflow-y-auto' : ''
+      }`}>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
             <div className="text-slate-400 text-xs">방문 횟수</div>
@@ -79,9 +91,17 @@ const SelectedCountryPanel = ({
           </div>
         </div>
         
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+        <div className={`bg-slate-800/50 rounded-lg border border-slate-700 ${
+          (isMobileLandscape || isLargeMobileLandscape) ? 'flex-shrink-0' : ''
+        } p-4`}>
           <div className="text-slate-400 text-sm mb-2">방문 도시 (클릭하면 여행 기간 표시)</div>
-          <div className="max-h-48 overflow-y-auto custom-scrollbar-right space-y-2">
+          <div className={`overflow-y-auto custom-scrollbar-right space-y-2 ${
+            isMobileLandscape 
+              ? 'mobile-landscape-cities' 
+              : isLargeMobileLandscape 
+                ? 'iphone-pro-landscape-cities'
+                : 'max-h-48'
+          }`}>
             {selectedCountry.cities.map((city, index) => {
               const cityTrips = (selectedCountry.trips || []).filter(trip => trip.cities.includes(city));
               return (

@@ -1131,12 +1131,12 @@ const UltraRealisticGlobe = () => {
             <button
               onClick={() => setShowSettings(true)}
               className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 text-white hover:bg-slate-800/95 transition-all ${
-                window.innerWidth <= 768 
+                (window.innerWidth <= 768) || (window.innerWidth > 768 && window.innerWidth <= 950 && 'ontouchstart' in window)
                   ? 'px-2 py-2 rounded-lg text-sm' 
                   : 'px-4 py-3 rounded-2xl font-medium text-sm flex items-center gap-2'
               }`}
             >
-              {window.innerWidth <= 768 ? '⚙️' : '⚙️ 설정'}
+              {(window.innerWidth <= 768) || (window.innerWidth > 768 && window.innerWidth <= 950 && 'ontouchstart' in window) ? '⚙️' : '⚙️ 설정'}
             </button>
           </>
         ) : (
