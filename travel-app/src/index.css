@@ -73,16 +73,16 @@ code {
   /* 여행지 추가/수정 모달 가로 모드 최적화 */
   .mobile-landscape-add-modal {
     max-height: 80vh !important;
-    max-width: 85vw !important;
-    width: auto !important;
+    max-width: 500px !important;
+    width: 85vw !important;
     overflow-y: auto !important;
   }
   
   /* 전체 여행 기록 모달 가로 모드 최적화 */
   .mobile-landscape-trips-modal {
     max-height: 85vh !important;
-    max-width: 90vw !important;
-    width: auto !important;
+    max-width: 700px !important;
+    width: 90vw !important;
   }
   
   /* 국가 패널 가로 모드 최적화 */
@@ -179,8 +179,16 @@ code {
   /* 터치 디바이스이면서 가로 모드인 경우에만 적용 */
   .iphone-pro-landscape-modal {
     max-height: 80vh !important;
-    max-width: 85vw !important;
-    width: auto !important;
+    max-width: 500px !important;
+    width: 85vw !important;
+    overflow-y: auto !important;
+  }
+  
+  /* 아이폰 프로 전체 여행 기록 모달 */
+  .iphone-pro-landscape-trips-modal {
+    max-height: 85vh !important;
+    max-width: 700px !important;
+    width: 90vw !important;
     overflow-y: auto !important;
   }
   

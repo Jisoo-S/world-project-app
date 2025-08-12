@@ -225,7 +225,9 @@ const GlobeControls = ({
                         <button
                           key={continent}
                           onClick={() => handleContinentClick(continent, countries)}
-                          className="aspect-square bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-xl hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-xl font-bold shadow-lg"
+                          className={`aspect-square bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-xl hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center font-bold shadow-lg ${
+                            (isMobileLandscape || isLargeMobileLandscape) ? 'text-sm' : 'text-xl'
+                          }`}
                           title={description}
                         >
                           {flag}
