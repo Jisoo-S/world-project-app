@@ -133,8 +133,8 @@ code {
   /* 모바일 가로 모드에서 컨트롤 패널 위치 조정 */
   .mobile-landscape-control-panel {
     width: auto !important;
-    min-width: 280px !important;
-    max-width: 350px !important;
+    min-width: 320px !important;
+    max-width: 400px !important;
   }
   
   /* 모바일 가로 모드에서 대륙 버튼 그리드 조정 */
@@ -243,8 +243,8 @@ code {
   
   .iphone-pro-landscape-control-panel {
     width: auto !important;
-    min-width: 280px !important;
-    max-width: 350px !important;
+    min-width: 320px !important;
+    max-width: 400px !important;
   }
   
   .iphone-pro-landscape-continent-grid {
