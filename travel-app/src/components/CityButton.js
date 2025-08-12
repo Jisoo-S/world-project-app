@@ -44,13 +44,11 @@ const CityButton = ({ city, cityTrips, onDeleteCityTrip, onEditTrip, country }) 
                     className="text-red-400 hover:text-red-600 h-6 w-6 flex items-center justify-center" // Added h-6 w-6 flex items-center justify-center
                     title="이 여행 삭제"
                   >
-                    ✖
+                    🗑️
                   </button>
                 </div>
               </div>
-              <div className="w-full text-right mt-1"> {/* Added w-full text-right mt-1 for #1 placement */}
-                #{tripIndex + 1}
-              </div>
+
             </div>
           ))}
         </div>
