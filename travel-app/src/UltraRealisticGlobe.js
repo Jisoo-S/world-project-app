@@ -852,7 +852,7 @@ const UltraRealisticGlobe = () => {
         }
 
         globeInstance = Globe()
-          .backgroundColor('#000015')
+          .backgroundColor('rgba(0,0,0,0)')
           .showAtmosphere(true)
           .atmosphereColor('#4080ff')
           .atmosphereAltitude(0.12);
@@ -1107,8 +1107,139 @@ const UltraRealisticGlobe = () => {
 
   return (
     <div 
-      className="relative w-screen h-screen overflow-hidden bg-black"
+      className="relative w-screen h-screen overflow-hidden"
+      style={{
+        background: 'radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%)',
+        position: 'relative'
+      }}
     >
+      {/* 큰 별들 레이어 */}
+      <div 
+        className="absolute inset-0 w-full h-full"
+        style={{
+          background: `
+            radial-gradient(4px 4px at 50px 80px, #fff, transparent),
+            radial-gradient(3px 3px at 180px 40px, #fff, transparent),
+            radial-gradient(3px 3px at 320px 150px, #fff, transparent),
+            radial-gradient(3px 3px at 420px 90px, #fff, transparent),
+            radial-gradient(4px 4px at 280px 200px, #fff, transparent),
+            radial-gradient(4px 4px at 120px 250px, #fff, transparent),
+            radial-gradient(3px 3px at 380px 300px, #fff, transparent),
+            radial-gradient(3px 3px at 80px 350px, #fff, transparent),
+            radial-gradient(4px 4px at 150px 320px, #fff, transparent),
+            radial-gradient(3px 3px at 450px 180px, #fff, transparent),
+            radial-gradient(3px 3px at 220px 60px, #fff, transparent),
+            radial-gradient(4px 4px at 360px 280px, #fff, transparent)
+          `,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '500px 400px'
+        }}
+      />
+      
+      {/* 중간 별들 레이어 */}
+      <div 
+        className="absolute inset-0 w-full h-full"
+        style={{
+          background: `
+            radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+            radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+            radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+            radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+            radial-gradient(2px 2px at 160px 30px, #fff, transparent),
+            radial-gradient(1px 1px at 200px 90px, #fff, transparent),
+            radial-gradient(1px 1px at 240px 50px, #fff, transparent),
+            radial-gradient(2px 2px at 280px 10px, #fff, transparent),
+            radial-gradient(1px 1px at 320px 70px, #fff, transparent),
+            radial-gradient(1px 1px at 360px 20px, #fff, transparent),
+            radial-gradient(2px 2px at 400px 60px, #fff, transparent),
+            radial-gradient(1px 1px at 440px 100px, #fff, transparent),
+            radial-gradient(2px 2px at 20px 130px, #fff, transparent),
+            radial-gradient(1px 1px at 60px 160px, #fff, transparent),
+            radial-gradient(1px 1px at 100px 190px, #fff, transparent),
+            radial-gradient(2px 2px at 140px 220px, #fff, transparent),
+            radial-gradient(1px 1px at 180px 250px, #fff, transparent),
+            radial-gradient(1px 1px at 220px 280px, #fff, transparent),
+            radial-gradient(2px 2px at 260px 310px, #fff, transparent),
+            radial-gradient(1px 1px at 300px 340px, #fff, transparent),
+            radial-gradient(1px 1px at 340px 370px, #fff, transparent),
+            radial-gradient(2px 2px at 380px 200px, #fff, transparent),
+            radial-gradient(1px 1px at 420px 230px, #fff, transparent),
+            radial-gradient(1px 1px at 460px 260px, #fff, transparent),
+            radial-gradient(2px 2px at 70px 320px, #fff, transparent),
+            radial-gradient(1px 1px at 110px 350px, #fff, transparent),
+            radial-gradient(2px 2px at 250px 120px, #fff, transparent),
+            radial-gradient(1px 1px at 390px 140px, #fff, transparent),
+            radial-gradient(1px 1px at 30px 210px, #fff, transparent),
+            radial-gradient(2px 2px at 470px 180px, #fff, transparent),
+            radial-gradient(1px 1px at 150px 60px, #fff, transparent),
+            radial-gradient(1px 1px at 330px 240px, #fff, transparent)
+          `,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '500px 500px'
+        }}
+      />
+      
+      {/* 작은 별들 레이어 */}
+      <div 
+        className="absolute inset-0 w-full h-full"
+        style={{
+          background: `
+            radial-gradient(1px 1px at 50px 50px, #fff, transparent),
+            radial-gradient(1px 1px at 150px 150px, #fff, transparent),
+            radial-gradient(1px 1px at 250px 250px, #fff, transparent),
+            radial-gradient(1px 1px at 350px 350px, #fff, transparent),
+            radial-gradient(1px 1px at 450px 450px, #fff, transparent),
+            radial-gradient(1px 1px at 75px 200px, #fff, transparent),
+            radial-gradient(1px 1px at 175px 300px, #fff, transparent),
+            radial-gradient(1px 1px at 275px 100px, #fff, transparent),
+            radial-gradient(1px 1px at 375px 200px, #fff, transparent),
+            radial-gradient(1px 1px at 125px 350px, #fff, transparent),
+            radial-gradient(1px 1px at 225px 50px, #fff, transparent),
+            radial-gradient(1px 1px at 325px 150px, #fff, transparent),
+            radial-gradient(1px 1px at 425px 250px, #fff, transparent),
+            radial-gradient(1px 1px at 25px 300px, #fff, transparent),
+            radial-gradient(1px 1px at 475px 100px, #fff, transparent)
+          `,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '500px 500px'
+        }}
+      />
+      
+      {/* 매우 작은 별들 레이어 */}
+      <div 
+        className="absolute inset-0 w-full h-full"
+        style={{
+          background: `
+            radial-gradient(0.8px 0.8px at 35px 25px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 85px 65px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 135px 105px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 185px 145px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 235px 185px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 285px 225px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 335px 265px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 385px 305px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 435px 345px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 15px 85px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 65px 125px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 115px 165px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 165px 205px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 215px 245px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 265px 285px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 315px 325px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 365px 365px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 415px 45px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 465px 85px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 45px 165px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 95px 205px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 145px 245px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 195px 285px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 245px 325px, #fff, transparent),
+            radial-gradient(0.8px 0.8px at 295px 365px, #fff, transparent)
+          `,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '480px 400px'
+        }}
+      />
       <div ref={containerRef} className="w-full h-full" />
 
       <LoadingScreen isLoading={isLoading} loadingStatus={loadingStatus} />
