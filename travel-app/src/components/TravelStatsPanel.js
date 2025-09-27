@@ -39,7 +39,13 @@ const TravelStatsPanel = ({
   }, [showMobileStats, setShowMobileStats]);
 
   return (
-    <div className="absolute top-6 right-6 z-10" ref={panelRef}>
+    <div className={`absolute z-10 right-6 ${
+      isMobile || isMobileLandscape || isLargeMobileLandscape 
+        ? isLandscape 
+          ? 'top-6'   // 가로모드일 때는 원래 top-6로 복원
+          : 'top-14'  // 세로모드일 때만 더 위로 올림 (top-20 -> top-14)
+        : 'top-6'     // 데스크톱은 그대로
+    }`} ref={panelRef}>
       <div className="flex gap-2">
         {/* 여행지 추가 버튼 */}
         <button

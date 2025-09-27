@@ -83,6 +83,7 @@ const UltraRealisticGlobe = () => {
     if (selectedCountry) {
       setShowMobileStats(false);
       setShowAllTrips(false);
+      setShowContinentPanel(false); // 대륙 패널도 닫기
     }
   }, [selectedCountry]);
 
@@ -90,6 +91,7 @@ const UltraRealisticGlobe = () => {
     if (showMobileStats) {
       setSelectedCountry(null);
       setShowAllTrips(false);
+      setShowContinentPanel(false); // 대륙 패널도 닫기
     }
   }, [showMobileStats]);
 
@@ -97,8 +99,16 @@ const UltraRealisticGlobe = () => {
     if (showAllTrips) {
       setSelectedCountry(null);
       setShowMobileStats(false);
+      setShowContinentPanel(false); // 대륙 패널도 닫기
     }
   }, [showAllTrips]);
+
+  // 모든 모달이 열릴 때 대륙 패널 닫기
+  useEffect(() => {
+    if (showAddTravel || showAuth || showSettings || editingTrip || showDeleteConfirm || showDateErrorModal || showAlertModal) {
+      setShowContinentPanel(false);
+    }
+  }, [showAddTravel, showAuth, showSettings, editingTrip, showDeleteConfirm, showDateErrorModal, showAlertModal]);
 
   // 사용자 세션 확인 및 데이터 로드
   useEffect(() => {
@@ -823,7 +833,13 @@ const UltraRealisticGlobe = () => {
   };
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    console.log('UltraRealisticGlobe useEffect 시작...');
+    console.log('containerRef.current 존재:', !!containerRef.current);
+    
+    if (!containerRef.current) {
+      console.log('containerRef가 없어서 useEffect 종료');
+      return;
+    }
 
     let globeInstance = null;
     let mounted = true;
@@ -840,31 +856,40 @@ const UltraRealisticGlobe = () => {
     }
 
 
-    const initGlobe = async () => {
+    const initGlobe = () => {
       try {
+        console.log('Globe 초기화 시작...');
+        
         if (!isInitialLoad) {
           setIsLoading(true);
-          setLoadingStatus('Loading...');
+          setLoadingStatus('Globe 생성 중...');
         }
 
         if (containerRef.current) {
+          console.log('Container 비우기...');
           containerRef.current.innerHTML = '';
         }
 
+        console.log('Globe 인스턴스 생성...');
         globeInstance = Globe()
           .backgroundColor('rgba(0,0,0,0)')
           .showAtmosphere(true)
           .atmosphereColor('#4080ff')
           .atmosphereAltitude(0.12);
+        
+        console.log('Globe 인스턴스 생성 완료:', !!globeInstance);
 
         if (!mounted) return;
         
+        console.log('Globe 텍스처 설정...');
         const textures = getGlobeTextures(globeMode);
         globeInstance
           .globeImageUrl(textures.globe)
           .bumpImageUrl(textures.bump);
-
+        
+        console.log('Globe 데이터 설정...');
         const travelPoints = createTravelPoints();
+        console.log('여행 포인트 개수:', travelPoints.length);
         globeInstance
           .pointsData(travelPoints)
           .pointAltitude(0.01)
@@ -943,24 +968,30 @@ const UltraRealisticGlobe = () => {
 
         if (!mounted) return;
 
-        const globeElement = globeInstance(containerRef.current);
+        console.log('Globe DOM에 마운트 시도...');
+        console.log('containerRef.current:', !!containerRef.current);
         
-        if (mounted && containerRef.current && globeElement) {
-          globeInstance
-            .width(window.innerWidth)
-            .height(window.innerHeight);
+        // DOM에 마운트
+        globeInstance(containerRef.current);
+        console.log('Globe DOM 마운트 완료');
+        
+        // 크기 설정
+        globeInstance
+          .width(window.innerWidth)
+          .height(window.innerHeight);
 
-          globeInstance.pointOfView({ 
-            lat: 20, 
-            lng: 0, 
-            altitude: 2.5 
-          });
+        console.log('Globe 초기 시점 설정...');
+        globeInstance.pointOfView({ 
+          lat: 20, 
+          lng: 0, 
+          altitude: 2.5 
+        });
 
-          setTimeout(() => {
-            if (mounted && globeInstance.controls) {
-              try {
-                const controls = globeInstance.controls();
-                if (controls) {
+        setTimeout(() => {
+          if (mounted && globeInstance.controls) {
+            try {
+              const controls = globeInstance.controls();
+              if (controls) {
                   controls.autoRotate = true;
                   controls.autoRotateSpeed = 0.3;
                   controls.enableDamping = true;
@@ -984,23 +1015,25 @@ const UltraRealisticGlobe = () => {
               setIsInitialLoad(false);
             }
           }, 1000);
-        }
 
       } catch (error) {
         console.error('Globe 초기화 에러:', error);
         setLoadingStatus('에러 발생: ' + error.message);
         
+        // 디버깅 정보 추가
+
         setTimeout(() => {
           if (mounted) {
             setIsLoading(false);
             setIsInitialLoad(false);
           }
-        }, 2000);
+        }, 3000);
       }
     };
 
     initGlobe();
 
+    // 리사이즈 핸들러
     const handleResize = () => {
       if (globeInstance && mounted) {
         globeInstance
@@ -1021,7 +1054,7 @@ const UltraRealisticGlobe = () => {
             globeInstance.renderer().dispose();
           }
         } catch (e) {
-          console.log('Globe cleanup error:', e);
+          console.log('Globe cleanup 오류:', e);
         }
       }
       
@@ -1029,22 +1062,28 @@ const UltraRealisticGlobe = () => {
         containerRef.current.innerHTML = '';
       }
     };
-  }, [globeMode]); // userTravelData를 dependency에서 제거하여 로딩 화면 방지
+  }, [globeMode]);
 
-  // userTravelData, user, homeCountry가 변경되면 지구본 데이터만 업데이트 (로딩 화면 없이)
+  // 데이터 업데이트
   useEffect(() => {
     if (!globeRef.current) return;
     
     const globe = globeRef.current;
     
-    // 포인트 데이터 업데이트
-    const travelPoints = createTravelPoints();
-    globe.pointsData(travelPoints);
-    
-    // 경로 데이터 업데이트
-    const routes = createTravelRoutes();
-    globe.arcsData(routes);
+    try {
+      // 포인트 데이터 업데이트
+      const travelPoints = createTravelPoints();
+      globe.pointsData(travelPoints);
+      
+      // 경로 데이터 업데이트
+      const routes = createTravelRoutes();
+      globe.arcsData(routes);
+    } catch (e) {
+      console.log('데이터 업데이트 오류:', e);
+    }
   }, [userTravelData, user, homeCountry]);
+
+
 
   // 컨트롤 함수들
   const goToCountry = (countryEnglishName) => {
@@ -1102,6 +1141,172 @@ const UltraRealisticGlobe = () => {
     const totalCities = Object.values(userTravelData).reduce((sum, data) => sum + data.cities.length, 0);
     return { totalCountries, totalVisits, totalCities };
   };
+
+
+          .pointAltitude(0.01)
+          .pointColor(d => d.color)
+          .pointRadius(d => d.size)
+          .pointResolution(32)
+          .pointLabel(d => `
+            <div style="
+              background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,20,40,0.9)); 
+              padding: 16px; 
+              border-radius: 12px; 
+              color: white; 
+              max-width: 280px;
+              border: 2px solid ${d.color};
+              box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+              backdrop-filter: blur(15px);
+            ">
+              <h3 style="margin: 0 0 12px 0; color: ${d.color}; font-size: 18px;">
+                ${d.displayCountry} ✈️
+              </h3>
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #60a5fa;">방문 횟수:</strong> 
+                <span style="color: ${d.color}; font-weight: bold;">${d.visits}회</span>
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #60a5fa;">마지막 방문:</strong> 
+                <span style="color: #cbd5e1;">${d.lastVisit}</span>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <strong style="color: #60a5fa;">방문 도시:</strong><br/>
+                <span style="color: #e2e8f0;">${d.cities.join(' • ')}</span>
+              </div>
+            </div>
+          `)
+          .onPointClick((point) => {
+            setSelectedCountry(point);
+            setSelectedLine(null);
+            if (globeInstance) {
+              globeInstance.pointOfView({ 
+                lat: point.lat, 
+                lng: point.lng, 
+                altitude: 1.2 
+              }, 1500);
+            }
+          })
+          .arcsData(routes)
+          .arcColor(d => d.color)
+          .arcStroke(1.5)
+          .arcAltitude(0.3)
+          .onArcClick(arc => {
+            setSelectedLine(arc);
+            setSelectedCountry(null);
+            setSelectedLineIndex(0);
+            setShowMobileStats(false);
+          });
+
+        if (!mounted) return;
+
+        // DOM에 마운트
+        console.log('DOM에 마운트 시도...');
+        globeInstance(containerRef.current);
+        
+        // 크기 설정
+        globeInstance
+          .width(window.innerWidth)
+          .height(window.innerHeight);
+
+        // 초기 시점 설정
+        globeInstance.pointOfView({ 
+          lat: 20, 
+          lng: 0, 
+          altitude: 2.5 
+        });
+
+        // 컨트롤 설정
+        setTimeout(() => {
+          if (mounted && globeInstance.controls) {
+            try {
+              const controls = globeInstance.controls();
+              if (controls) {
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 0.3;
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.1;
+                controls.minDistance = 200;
+                controls.maxDistance = 1000;
+                console.log('✅ Globe 컨트롤 설정 완료');
+              }
+            } catch (e) {
+              console.log('Globe 컨트롤 오류:', e);
+            }
+          }
+        }, 1000);
+
+        globeRef.current = globeInstance;
+        
+        console.log('✅ Globe 로드 완료!');
+        setLoadingStatus('완료!');
+        
+        setTimeout(() => {
+          if (mounted) {
+            setIsLoading(false);
+            setIsInitialLoad(false);
+          }
+        }, 1500);
+
+      } catch (error) {
+        console.error('Globe 초기화 에러:', error);
+        setLoadingStatus('에러 발생: ' + error.message);
+        
+        setTimeout(() => {
+          if (mounted) {
+            setIsLoading(false);
+            setIsInitialLoad(false);
+          }
+        }, 3000);
+      }
+    };
+
+    initGlobe();
+
+    // 리사이즈 핸들러
+    const handleResize = () => {
+      if (globeInstance && mounted) {
+        globeInstance
+          .width(window.innerWidth)
+          .height(window.innerHeight);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('resize', handleResize);
+      
+      if (globeInstance) {
+        try {
+          if (globeInstance.renderer && globeInstance.renderer()) {
+            globeInstance.renderer().dispose();
+          }
+        } catch (e) {
+          console.log('Globe cleanup 오류:', e);
+        }
+      }
+      
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+    };
+  }, [globeMode]); // globeMode가 바뀐 때만 재초기화
+
+  // 데이터 업데이트 useEffect
+  useEffect(() => {
+    if (!globeRef.current) return;
+    
+    const globe = globeRef.current;
+    
+    // 포인트 데이터 업데이트
+    const travelPoints = createTravelPoints();
+    globe.pointsData(travelPoints);
+    
+    // 경로 데이터 업데이트
+    const routes = createTravelRoutes();
+    globe.arcsData(routes);
+  }, [userTravelData, user, homeCountry]);
 
   const stats = getTravelStats();
 
@@ -1240,7 +1445,7 @@ const UltraRealisticGlobe = () => {
           backgroundSize: '480px 400px'
         }}
       />
-      <div ref={containerRef} className="w-full h-full" />
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }} />
 
       <LoadingScreen isLoading={isLoading} loadingStatus={loadingStatus} />
 
@@ -1274,7 +1479,7 @@ const UltraRealisticGlobe = () => {
           (!selectedLine || window.innerWidth > 768) && (!selectedCountry || window.innerWidth > 768) && (
           <button
             onClick={() => setShowAuth(true)}
-            className={`bg-blue-600/90 hover:bg-blue-700/90 text-white font-medium transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-lg ${
+            className={`bg-blue-600/90 hover:bg-blue-700/90 text-white font-medium transition-all duration-300 shadow-lg hover-shadow-xl backdrop-blur-lg ${
               window.innerWidth <= 768 
                 ? 'px-3 py-2 rounded-lg text-xs' 
                 : 'px-4 py-3 rounded-xl text-sm'

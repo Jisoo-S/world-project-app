@@ -32,13 +32,16 @@ const GlobeControls = ({
       }
     };
 
-    if (showContinentPanel && isMobile) {
+    // 모든 모바일 환경(세로, 가로 포함)에서 외부 클릭 감지 적용
+    if (showContinentPanel && isAnyMobile) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside); // 터치 이벤트도 추가
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
       };
     }
-  }, [showContinentPanel, setShowContinentPanel, isMobile]);
+  }, [showContinentPanel, setShowContinentPanel, isAnyMobile]);
 
   const continents = [
     { continent: 'Asia', flag: 'AS', countries: ['South Korea', 'Japan'], description: 'AS' },
@@ -70,7 +73,8 @@ const GlobeControls = ({
         }, 1500);
       }
     }
-    if (isMobile) {
+    // 모든 모바일 환경(세로, 가로 포함)에서 패널 닫기
+    if (isAnyMobile) {
       setShowContinentPanel(false);
     }
   };
@@ -78,7 +82,13 @@ const GlobeControls = ({
   return (
     <>
       {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute top-6 ${isMobile ? 'left-3' : 'left-6'} z-10`}>
+      <div className={`absolute z-10 ${
+        isMobile 
+          ? isLandscape 
+            ? 'top-6 left-32'  // 가로모드일 때 더 오른쪽으로 이동 (left-20 -> left-32)
+            : 'top-14 left-3'  // 세로모드일 때만 더 위로 올림
+          : 'top-6 left-6'    // 데스크톱은 그대로
+      }`}>
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isMobile 
