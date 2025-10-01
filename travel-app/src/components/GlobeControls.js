@@ -70,7 +70,7 @@ const GlobeControls = ({
           lat: continentCoords[continent][0], 
           lng: continentCoords[continent][1], 
           altitude: 2.0 
-        }, 1500);
+        });
       }
     }
     // 모든 모바일 환경(세로, 가로 포함)에서 패널 닫기
@@ -153,17 +153,7 @@ const GlobeControls = ({
           }`}>
             <button
               onClick={() => {
-                if (globeRef.current) {
-                  const currentPov = globeRef.current.pointOfView();
-                  const currentAltitude = currentPov.altitude || zoomLevel;
-                  const newZoom = Math.max(1.2, currentAltitude - 0.3);
-                  setZoomLevel(newZoom);
-                  globeRef.current.pointOfView({ 
-                    lat: currentPov.lat, 
-                    lng: currentPov.lng, 
-                    altitude: newZoom 
-                  }, 300);
-                }
+                if (globeRef.current) globeRef.current.zoomOut();
               }}
               className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
                 isAnyMobile ? 'h-6 text-xs' : 'h-8 text-sm'
@@ -173,17 +163,7 @@ const GlobeControls = ({
             </button>
             <button
               onClick={() => {
-                if (globeRef.current) {
-                  const currentPov = globeRef.current.pointOfView();
-                  const currentAltitude = currentPov.altitude || zoomLevel;
-                  const newZoom = Math.min(8.0, currentAltitude + 0.3);
-                  setZoomLevel(newZoom);
-                  globeRef.current.pointOfView({ 
-                    lat: currentPov.lat, 
-                    lng: currentPov.lng, 
-                    altitude: newZoom 
-                  }, 300);
-                }
+                if (globeRef.current) globeRef.current.zoomIn();
               }}
               className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
                 isAnyMobile ? 'h-6 text-xs' : 'h-8 text-sm'
