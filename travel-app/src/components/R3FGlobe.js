@@ -96,7 +96,9 @@ const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
             const createRoute = (c1, c2, co1, co2) => {
                 const startPos = latLngToVector3(co1[0], co1[1], 10);
                 const endPos = latLngToVector3(co2[0], co2[1], 10);
-                const mid = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5).normalize().multiplyScalar(10 + startPos.distanceTo(endPos) * 0.2);
+                const distance = startPos.distanceTo(endPos);
+                const heightMultiplier = 0.1 + (distance / 20) * 0.4;
+                const mid = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5).normalize().multiplyScalar(10 + distance * heightMultiplier);
                 return new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
             };
 
@@ -156,11 +158,11 @@ const SceneWrapper = forwardRef(({ globeMode, userTravelData, homeCountry, onPoi
         goToCountry: (countryName) => {
             const countryInfo = countryData[countryName];
             if (countryInfo) {
-                setTarget({ lat: countryInfo.coords[0], lng: countryInfo.coords[1], altitude: 1.5 });
+                setTarget({ lat: countryInfo.coords[0], lng: countryInfo.coords[1], altitude: 2.2 });
             }
         },
         pointOfView: ({ lat, lng, altitude }) => {
-            setTarget({ lat, lng, altitude: altitude || 1.5 });
+            setTarget({ lat, lng, altitude: altitude || 2.2 });
         },
         resetView: () => {
             const homeData = countryData[homeCountry || 'South Korea'];
@@ -187,24 +189,29 @@ const SceneWrapper = forwardRef(({ globeMode, userTravelData, homeCountry, onPoi
 
     useFrame(() => {
         if (target && controlsRef.current) {
+            controlsRef.current.enabled = false;
             const targetPosition = latLngToVector3(target.lat, target.lng, 10);
-            const altitude = target.altitude || 1.5;
+            const altitude = target.altitude || 2.2;
             const cameraPosition = new THREE.Vector3().copy(targetPosition).normalize().multiplyScalar(10 + altitude * 5);
 
-            camera.position.lerp(cameraPosition, 0.05);
-            controlsRef.current.target.lerp(targetPosition, 0.05);
+            camera.position.lerp(cameraPosition, 0.1);
+            // controlsRef.current.target.lerp(targetPosition, 0.05); // Keep target at center
 
             if (camera.position.distanceTo(cameraPosition) < 0.1) {
                 setTarget(null);
+                controlsRef.current.enabled = true;
+                controlsRef.current.update();
             }
+        } else if (controlsRef.current) {
+            controlsRef.current.update();
         }
     });
 
     return (
         <>
             <Stars radius={200} depth={50} count={8000} factor={5} saturation={0} fade speed={1} />
-            <Globe globeMode={globeMode} userTravelData={userTravelData} homeCountry={homeCountry} onPointClick={(point) => { onPointClick(point); setTarget({ lat: point.lat, lng: point.lng, altitude: 1.5 }); }} />
-            <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={12} maxDistance={100} autoRotate={!target} autoRotateSpeed={0.3} />
+            <Globe globeMode={globeMode} userTravelData={userTravelData} homeCountry={homeCountry} onPointClick={(point) => { onPointClick(point); setTarget({ lat: point.lat, lng: point.lng, altitude: 2.2 }); }} />
+            <OrbitControls ref={controlsRef} target={[0, 0, 0]} enablePan={false} enableZoom enableRotate minDistance={12} maxDistance={100} autoRotate={!target} autoRotateSpeed={0.3} />
         </>
     );
 });

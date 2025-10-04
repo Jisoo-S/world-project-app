@@ -36,7 +36,7 @@ const ConfirmModal = ({
         </div>
 
         <div className="mb-6">
-          <p className="text-white" style={{whiteSpace: 'pre-line'}}>{message}</p>
+          <p className="text-white text-center" style={{whiteSpace: 'pre-line'}}>{message}</p>
         </div>
 
         <div className="flex gap-3">

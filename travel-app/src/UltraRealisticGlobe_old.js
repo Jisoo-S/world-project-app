@@ -13,7 +13,7 @@ import ConfirmModal from './components/ConfirmModal';
 import { supabase } from './supabaseClient';
 import R3FGlobe from './components/R3FGlobe';
 
-const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip }) => {
+const UltraRealisticGlobe = () => {
   const globeRef = useRef();
   const containerRef = useRef();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -36,23 +36,6 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
   }, []);
   
   const [userTravelData, setUserTravelData] = useState({});
-
-  useEffect(() => {
-    if (travelData) {
-      const dataWithCoords = {};
-      for (const key in travelData) {
-        const englishName = Object.keys(countryData).find(k => countryData[k].koreanName === key);
-        if (englishName) {
-            dataWithCoords[englishName] = {
-                ...travelData[key],
-                coordinates: countryData[englishName]?.coords || [0, 0]
-            };
-        }
-      }
-      setUserTravelData(dataWithCoords);
-      setIsInitialLoad(false); // <-- THIS IS THE FIX
-    }
-  }, [travelData]);
   const [showAddTravel, setShowAddTravel] = useState(false);
   const [newTravelData, setNewTravelData] = useState({
     country: '',
@@ -77,6 +60,7 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
   const [successMessage, setSuccessMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTripData, setDeleteTripData] = useState(null);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -125,30 +109,28 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
   }, [showAddTravel, showAuth, showSettings, editingTrip, showDeleteConfirm, showDateErrorModal, showAlertModal]);
 
   useEffect(() => {
-    if (!travelData) { // Only run if travelData prop is not provided
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          setUser(session.user);
-          loadUserData(session.user.id);
-        } else {
-          setIsInitialLoad(false);
-        }
-      });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        loadUserData(session.user.id);
+      } else {
+        setIsInitialLoad(false);
+      }
+    });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          loadUserData(session.user.id);
-        } else {
-          setUser(null);
-          setUserTravelData({});
-          setHomeCountry('South Korea');
-        }
-      });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        loadUserData(session.user.id);
+      } else {
+        setUser(null);
+        setUserTravelData({});
+        setHomeCountry('South Korea');
+      }
+    });
 
-      return () => subscription.unsubscribe();
-    }
-  }, [travelData]);
+    return () => subscription.unsubscribe();
+  }, []);
 
   const loadUserData = async (userId) => {
     setIsLoading(true);
@@ -186,6 +168,7 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
           }
           
           loadedTravelData[countryEnglishName].trips.push({
+            id: travel.id,
             cities: travel.cities,
             startDate: travel.start_date,
             endDate: travel.end_date
@@ -220,25 +203,21 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
     }
   };
 
-  const updateInSupabase = async (countryEnglishName, oldTrip, newTrip) => {
+  const updateInSupabase = async (tripId, newTripData) => {
     if (!user) return;
     try {
-      const { data: existingData, error: selectError } = await supabase.from('user_travels').select('id').eq('user_id', user.id).eq('country', countryEnglishName).eq('start_date', oldTrip.startDate).eq('end_date', oldTrip.endDate).single();
-      if (selectError) throw selectError;
-      if (existingData) {
-        const { error: updateError } = await supabase.from('user_travels').update({ cities: newTrip.cities, start_date: newTrip.startDate, end_date: newTrip.endDate }).eq('id', existingData.id);
-        if (updateError) throw updateError;
-      }
+      const { error } = await supabase.from('user_travels').update(newTripData).eq('id', tripId);
+      if (error) throw error;
     } catch (error) {
       console.error('Error updating in Supabase:', error);
       alert('데이터 업데이트에 실패했습니다.');
     }
   };
 
-  const deleteFromSupabase = async (countryEnglishName, trip) => {
+  const deleteFromSupabase = async (tripId) => {
     if (!user) return;
     try {
-      const { error } = await supabase.from('user_travels').delete().eq('user_id', user.id).eq('country', countryEnglishName).eq('start_date', trip.startDate).eq('end_date', trip.endDate);
+      const { error } = await supabase.from('user_travels').delete().eq('id', tripId);
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting from Supabase:', error);
@@ -262,10 +241,84 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
     setHomeCountry('South Korea');
   };
 
-  const updateTravelDestination = async () => { /* implementation needed */ };
-  const addTravelDestination = async () => { /* implementation needed */ };
-  const deleteCityTrip = async (tripToDelete) => { /* implementation needed */ };
-  const executeDeleteCityTrip = async () => { /* implementation needed */ };
+  const updateTravelDestination = async () => {
+    if (!editingTrip || !user) return;
+
+    const startDateObj = new Date(editingTrip.startDate);
+    const endDateObj = new Date(editingTrip.endDate);
+
+    if (startDateObj > endDateObj) {
+      setShowDateErrorModal(true);
+      return;
+    }
+
+    const newTripData = {
+      cities: editingTrip.cities,
+      start_date: editingTrip.startDate,
+      end_date: editingTrip.endDate,
+    };
+
+    await updateInSupabase(editingTrip.id, newTripData);
+    await loadUserData(user.id);
+    setEditingTrip(null);
+    setSelectedCountry(null);
+  };
+
+  const addTravelDestination = async () => {
+    if (!newTravelData.country || !newTravelData.cities || !newTravelData.startDate || !newTravelData.endDate) {
+      setAlertMessage('모든 필드를 입력해주세요.');
+      setShowAlertModal(true);
+      return;
+    }
+
+    const startDateObj = new Date(newTravelData.startDate);
+    const endDateObj = new Date(newTravelData.endDate);
+
+    if (startDateObj > endDateObj) {
+      setShowDateErrorModal(true);
+      return;
+    }
+
+    const countryEnglishName = newTravelData.country;
+    if (!countryData[countryEnglishName]) {
+        setAlertMessage('선택한 국가를 찾을 수 없습니다.');
+        setShowAlertModal(true);
+        return;
+    }
+
+    const newTrip = {
+      cities: newTravelData.cities.split(',').map(s => s.trim()),
+      startDate: newTravelData.startDate,
+      endDate: newTravelData.endDate
+    };
+
+    await saveToSupabase(countryEnglishName, newTrip);
+    await loadUserData(user.id);
+
+    setNewTravelData({
+      country: '',
+      cities: '',
+      startDate: '',
+      endDate: ''
+    });
+    setShowAddTravel(false);
+  };
+
+  const deleteCityTrip = async (tripToDelete) => {
+    setDeleteTripData(tripToDelete);
+    setShowDeleteConfirm(true);
+  };
+
+  const executeDeleteCityTrip = async () => {
+    if (!deleteTripData || !user) return;
+
+    await deleteFromSupabase(deleteTripData.id);
+    await loadUserData(user.id);
+
+    setShowDeleteConfirm(false);
+    setDeleteTripData(null);
+    setSelectedCountry(null);
+  };
 
   const goToCountry = (countryEnglishName) => {
     if (globeRef.current) {
@@ -300,6 +353,12 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
     const totalCities = Object.values(userTravelData).reduce((sum, data) => sum + data.cities.length, 0);
     return { totalCountries, totalVisits, totalCities };
   };
+
+  const getDeleteMessage = () => {
+    if (!deleteTripData) return '';
+    const countryName = countryData[deleteTripData.country]?.koreanName || deleteTripData.country;
+    return `${countryName} (${deleteTripData.country})\n\n📍 ${deleteTripData.cities.join(' • ')}\n📅 ${deleteTripData.startDate} ~ ${deleteTripData.endDate}\n\n이 여행 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.`
+  }
 
   const stats = getTravelStats();
 
@@ -533,6 +592,7 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
         setSelectedCountry={setSelectedCountry}
         setSelectedLine={setSelectedLine}
         setShowAddTravel={setShowAddTravel}
+        setShowAllTrips={setShowAllTrips}
         setShowGlobeControlsOnMobile={setShowGlobeControlsOnMobile}
       />
 
@@ -561,15 +621,43 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
         addTravelDestination={addTravelDestination}
       />
 
+      <DateErrorModal 
+        showDateErrorModal={showDateErrorModal}
+        setShowDateErrorModal={setShowDateErrorModal}
+      />
+
+      <AlertDialog
+        show={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        message={alertMessage}
+      />
+
+      <AllTripsModal
+        showAllTrips={showAllTrips}
+        setShowAllTrips={setShowAllTrips}
+        userTravelData={userTravelData}
+        countryData={countryData}
+        goToCountry={goToCountry}
+        setSelectedCountry={setSelectedCountry}
+        setEditingTrip={setEditingTrip}
+        deleteCityTrip={deleteCityTrip}
+      />
+
       <EditTravelModal 
         editingTrip={editingTrip}
         setEditingTrip={setEditingTrip}
         updateTravelDestination={updateTravelDestination}
       />
 
-      <DateErrorModal 
-        showDateErrorModal={showDateErrorModal}
-        setShowDateErrorModal={setShowDateErrorModal}
+      <ConfirmModal
+        show={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={executeDeleteCityTrip}
+        title="⚠️ 여행기록 삭제"
+        message={getDeleteMessage()}
+        confirmText="삭제"
+        cancelText="취소"
+        isDestructive={true}
       />
 
       <AuthModal 
@@ -586,24 +674,7 @@ const UltraRealisticGlobe = ({ travelData, onUpdateTrip, onDeleteTrip, onAddTrip
         setHomeCountry={setHomeCountry}
       />
 
-      <style>
-        {`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(51, 65, 85, 0.5);
-            border-radius: 3px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(100, 116, 139, 0.8);
-            border-radius: 3px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.8);
-          }
-        `}
-      </style>
+      {/* ... styles ... */}
     </div>
   );
 };

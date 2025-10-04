@@ -353,6 +353,7 @@ export const AllTripsModal = ({
   Object.entries(userTravelData).forEach(([countryEnglishName, data]) => {
     data.trips.forEach(trip => {
       allTrips.push({
+        id: trip.id,
         country: countryEnglishName,
         koreanName: countryData[countryEnglishName]?.koreanName || countryEnglishName,
         cities: trip.cities,
@@ -430,6 +431,7 @@ export const AllTripsModal = ({
                           <button
                             onClick={() => {
                               setEditingTrip({
+                                id: trip.id,
                                 country: trip.country,
                                 cities: trip.cities,
                                 startDate: trip.startDate,
@@ -508,7 +510,7 @@ export const DateErrorModal = ({ showDateErrorModal, setShowDateErrorModal }) =>
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           setShowDateErrorModal(false);
@@ -534,7 +536,7 @@ export const AlertDialog = ({ show, message, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
