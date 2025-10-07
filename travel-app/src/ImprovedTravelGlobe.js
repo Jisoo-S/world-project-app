@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
 import * as THREE from 'three';
+import TWEEN from '@tweenjs/tween.js';
 
-const ImprovedTravelGlobe = ({ 
+const ImprovedTravelGlobe = React.forwardRef(({ 
   userTravelData: propUserTravelData = {},
   homeCountry = '대한민국',
   globeMode: propGlobeMode = 'satellite',
   onCountryClick,
   onLineClick 
-}) => {
+}, ref) => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
@@ -45,7 +46,7 @@ const ImprovedTravelGlobe = ({
   useEffect(() => { setGlobeMode(propGlobeMode); }, [propGlobeMode]);
 
   const latLngToVector3 = useCallback((lat, lng, radius = 2) => {
-    const phi = (90 - lat) * (Math.PI / 180), theta = (lng + 180) * (Math.PI / 180);
+    const phi = (90 - lat) * (Math.PI / 180), theta = (lng + 90) * (Math.PI / 180);
     return new THREE.Vector3(-(radius * Math.sin(phi) * Math.cos(theta)), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta));
   }, []);
 
@@ -123,9 +124,9 @@ const ImprovedTravelGlobe = ({
 
   const createGreatCircleArc = useCallback((start, end, maxHeight) => {
     const points = [];
-    for (let i = 0; i <= 100; i++) {
-      const p = new THREE.Vector3().lerpVectors(start, end, i / 100);
-      p.normalize().multiplyScalar(2 + maxHeight * Math.sin(Math.PI * i / 100));
+    for (let i = 0; i <= 200; i++) {
+      const p = new THREE.Vector3().lerpVectors(start, end, i / 200);
+      p.normalize().multiplyScalar(2 + maxHeight * Math.sin(Math.PI * i / 200));
       points.push(p);
     }
     return points;
@@ -143,7 +144,7 @@ const ImprovedTravelGlobe = ({
       if (!countryInfo) return;
       const countryPos = latLngToVector3(countryInfo.coords[0], countryInfo.coords[1], 2);
       const distance = calculateDistance(homeInfo.coords[0], homeInfo.coords[1], countryInfo.coords[0], countryInfo.coords[1]);
-      const arc = createGreatCircleArc(homePos, countryPos, Math.min(0.5, distance / 20000 * 0.5));
+      const arc = createGreatCircleArc(homePos, countryPos, Math.min(1.5, distance / 20000 * 1.5));
       const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(arc), new THREE.LineBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.7 }));
       line.userData = { type: 'travel-line', from: homeCountry, to: country, isLine: true };
       lines.push(line);
@@ -219,19 +220,46 @@ const ImprovedTravelGlobe = ({
   const animate = useCallback(() => {
     if (isAnimating && globeGroupRef.current) {
       globeGroupRef.current.rotation.y += 0.002;
-      markersRef.current.forEach((m, i) => {
-        const t = Date.now() * 0.001 + i * 0.3;
-        m.scale.setScalar((2.5 + m.userData.visits * 0.5) * (1 + Math.sin(t * 3) * 0.1));
-      });
     }
     if (rendererRef.current && sceneRef.current && cameraRef.current) rendererRef.current.render(sceneRef.current, cameraRef.current);
     animationIdRef.current = requestAnimationFrame(animate);
+    TWEEN.update();
   }, [isAnimating]);
 
-  const resetView = useCallback(() => { if (cameraRef.current && globeGroupRef.current) { cameraRef.current.position.set(0, 0, 6); globeGroupRef.current.rotation.set(0, 0, 0); } }, []);
+  const goToLatLng = useCallback((lat, lng) => {
+    const targetRotationY = (90 - lng) * (Math.PI / 180);
+    const targetRotationX = lat * (Math.PI / 180);
+
+    new TWEEN.Tween(globeGroupRef.current.rotation)
+      .to({ x: targetRotationX, y: targetRotationY }, 1000)
+      .easing(TWEEN.Easing.Cubic.Out)
+      .start();
+  }, []);
+
+  const resetView = useCallback(() => {
+    const homeInfo = countryDatabase[homeCountry];
+    if (homeInfo) {
+      goToLatLng(homeInfo.coords[0], homeInfo.coords[1]);
+    }
+  }, [homeCountry, countryDatabase, goToLatLng]);
+
   const toggleRotation = useCallback(() => { setIsAnimating(p => !p); }, []);
   const zoomIn = useCallback(() => { if (cameraRef.current) cameraRef.current.position.z = Math.max(3, cameraRef.current.position.z - 0.5); }, []);
   const zoomOut = useCallback(() => { if (cameraRef.current) cameraRef.current.position.z = Math.min(30, cameraRef.current.position.z + 0.5); }, []);
+
+  useImperativeHandle(ref, () => ({
+    goToLatLng,
+    zoomIn,
+    zoomOut,
+    resetView,
+    toggleRotation,
+    goToCountry: (country) => {
+      const countryInfo = countryDatabase[country];
+      if (countryInfo) {
+        goToLatLng(countryInfo.coords[0], countryInfo.coords[1]);
+      }
+    }
+  }));
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -339,6 +367,6 @@ const ImprovedTravelGlobe = ({
       )}
     </div>
   );
-};
+});
 
 export default ImprovedTravelGlobe;

@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useMemo, useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useTexture, OrbitControls, Stars, Html, Line } from '@react-three/drei';
 import * as THREE from 'three';
@@ -46,7 +46,7 @@ const Atmosphere = () => (
     </mesh>
 );
 
-const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
+const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick, onLineClick }, ref) => {
     const [hoveredPoint, setHoveredPoint] = useState(null);
     const [dayTexture, bumpMap, nightTexture, satelliteTexture] = useTexture([
         earthDayTextureUrl,
@@ -82,7 +82,7 @@ const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
         Object.entries(userTravelData).forEach(([countryEnglishName, data]) => {
             if (!data.coordinates) return; // Fix for delete crash
             (data.trips || []).forEach(trip => {
-                allTripsFlat.push({ country: countryEnglishName, coords: data.coordinates, startDate: trip.startDate, endDate: trip.endDate });
+                allTripsFlat.push({ country: countryEnglishName, coords: data.coordinates, startDate: trip.startDate, endDate: trip.endDate, id: trip.id, cities: trip.cities });
             });
         });
         allTripsFlat.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
@@ -92,14 +92,15 @@ const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
 
         if (defaultCoords) {
             const getRouteKey = (c1, c2) => [c1, c2].sort().join('-');
-            const isDateOverlapping = (s1, e1, s2, e2) => new Date(s1) <= new Date(e2) && new Date(s2) <= new Date(e1);
-            const createRoute = (c1, c2, co1, co2) => {
-                const startPos = latLngToVector3(co1[0], co1[1], 10);
-                const endPos = latLngToVector3(co2[0], co2[1], 10);
+            const createRoute = (c1, c2, co1, co2, trips) => {
+                const startPos = latLngToVector3(co1[0], co1[1], 10.1);
+                const endPos = latLngToVector3(co2[0], co2[1], 10.1);
                 const distance = startPos.distanceTo(endPos);
-                const heightMultiplier = 0.1 + (distance / 20) * 0.4;
+                const heightMultiplier = 0.1 + (distance / 20) * 0.6;
                 const mid = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5).normalize().multiplyScalar(10 + distance * heightMultiplier);
-                return new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
+                const curve = new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
+                curve.userData = { from: c1, to: c2, trips: trips };
+                return curve;
             };
 
             allTripsFlat.forEach((currentTrip, index) => {
@@ -108,14 +109,14 @@ const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
                 if (connectingTrips.length > 0) {
                     connectingTrips.forEach(cTrip => {
                         const routeKey = getRouteKey(cTrip.country, currentTrip.country);
-                        if (!routesMap[routeKey]) routesMap[routeKey] = createRoute(cTrip.country, currentTrip.country, cTrip.coords, currentTrip.coords);
+                        if (!routesMap[routeKey]) routesMap[routeKey] = createRoute(cTrip.country, currentTrip.country, cTrip.coords, currentTrip.coords, [cTrip, currentTrip]);
                     });
                     hasConnection = true;
                 }
                 if (!hasConnection) {
                     const routeKey = getRouteKey(defaultCountry, currentTrip.country);
                     if (currentTrip.country !== defaultCountry && !routesMap[routeKey]) {
-                        routesMap[routeKey] = createRoute(defaultCountry, currentTrip.country, defaultCoords, currentTrip.coords);
+                        routesMap[routeKey] = createRoute(defaultCountry, currentTrip.country, defaultCoords, currentTrip.coords, [currentTrip]);
                     }
                 }
             });
@@ -125,16 +126,16 @@ const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
     }, [userTravelData, homeCountry]);
 
     return (
-        <group>
-            <ambientLight intensity={globeMode === 'night' ? 0.1 : 0.3} />
-            <directionalLight position={[10, 10, 5]} intensity={globeMode === 'night' ? 0.3 : 1.0} />
+        <group ref={ref}>
+            <ambientLight intensity={globeMode === 'night' ? 0.1 : 0.6} />
+            <directionalLight position={[10, 10, 5]} intensity={globeMode === 'night' ? 0.3 : 1.2} />
             <Atmosphere />
             <mesh>
                 <sphereGeometry args={[10, 64, 64]} />
                 <meshStandardMaterial map={currentTexture} bumpMap={bumpMap} bumpScale={0.05} metalness={0.1} roughness={0.7} />
             </mesh>
             {travelPoints.map(point => <TravelMarker key={point.country} point={point} onPointClick={onPointClick} onPointerOver={setHoveredPoint} onPointerOut={() => setHoveredPoint(null)} /> )}
-            {travelArcs.map((curve, index) => <Line key={index} points={curve.getPoints(50)} color="#60a5fa" lineWidth={1} transparent opacity={0.6} /> )}
+            {travelArcs.map((curve, index) => <Line key={index} points={curve.getPoints(50)} color="#60a5fa" lineWidth={1} transparent opacity={0.6} onPointerDown={(e) => { e.stopPropagation(); onLineClick(curve.userData); }} /> )}
             {hoveredPoint && (
                 <Html position={hoveredPoint.position.clone().multiplyScalar(1.05)}>
                     <div className="html-label">
@@ -147,33 +148,60 @@ const Globe = ({ globeMode, userTravelData, homeCountry, onPointClick }) => {
             )}
         </group>
     );
-};
+});
 
-const SceneWrapper = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick }, ref) => {
+const SceneWrapper = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick, onLineClick }, ref) => {
     const { camera } = useThree();
     const controlsRef = useRef();
     const [target, setTarget] = useState(null);
+    const [isAutoRotating, setIsAutoRotating] = useState(true);
 
     useImperativeHandle(ref, () => ({
-        goToCountry: (countryName) => {
+        goToCountry: (countryName, altitude) => {
             const countryInfo = countryData[countryName];
             if (countryInfo) {
-                setTarget({ lat: countryInfo.coords[0], lng: countryInfo.coords[1], altitude: 2.2 });
+                const lng = countryInfo.coords[1];
+                const lat = countryInfo.coords[0];
+                setTarget({
+                    lat: lat,
+                    lng: lng,
+                    altitude: altitude || 3.0,
+                    angles: {
+                        azimuthal: -lng * Math.PI / 180,
+                        polar: (90 - lat) * Math.PI / 180
+                    }
+                });
             }
-        },
-        pointOfView: ({ lat, lng, altitude }) => {
-            setTarget({ lat, lng, altitude: altitude || 2.2 });
         },
         resetView: () => {
             const homeData = countryData[homeCountry || 'South Korea'];
             if (homeData) {
-                setTarget({ lat: homeData.coords[0], lng: homeData.coords[1], altitude: 2.5 });
+                const lng = homeData.coords[1];
+                const lat = homeData.coords[0];
+                setTarget({
+                    lat: lat,
+                    lng: lng,
+                    altitude: 3.5,
+                    angles: {
+                        azimuthal: -lng * Math.PI / 180,
+                        polar: (90 - lat) * Math.PI / 180
+                    }
+                });
             }
         },
+        pointOfView: ({ lat, lng, altitude }) => {
+            setTarget({
+                lat: lat,
+                lng: lng,
+                altitude: altitude || 3.0,
+                angles: {
+                    azimuthal: -lng * Math.PI / 180,
+                    polar: (90 - lat) * Math.PI / 180
+                }
+            });
+        },
         toggleRotation: () => {
-            if (controlsRef.current) {
-                controlsRef.current.autoRotate = !controlsRef.current.autoRotate;
-            }
+            setIsAutoRotating(prev => !prev);
         },
         zoomIn: () => {
             if (controlsRef.current) {
@@ -187,22 +215,54 @@ const SceneWrapper = forwardRef(({ globeMode, userTravelData, homeCountry, onPoi
         }
     }));
 
-    useFrame(() => {
+    useEffect(() => {
         if (target && controlsRef.current) {
-            controlsRef.current.enabled = false;
-            const targetPosition = latLngToVector3(target.lat, target.lng, 10);
-            const altitude = target.altitude || 2.2;
-            const cameraPosition = new THREE.Vector3().copy(targetPosition).normalize().multiplyScalar(10 + altitude * 5);
+            const controls = controlsRef.current;
+            controls.enabled = false;
+            
+            const startAzimuthal = controls.getAzimuthalAngle();
+            const startPolar = controls.getPolarAngle();
+            const startDistance = camera.position.length();
+            
+            const targetAzimuthal = target.angles.azimuthal;
+            const targetPolar = target.angles.polar;
+            const targetDistance = 10 + (target.altitude || 3.0) * 5;
+            
+            let animationFrameId;
+            const duration = 1000; // 1 second animation
+            const startTime = Date.now();
+            
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const newAzimuthal = THREE.MathUtils.lerp(startAzimuthal, targetAzimuthal, progress);
+                const newPolar = THREE.MathUtils.lerp(startPolar, targetPolar, progress);
+                const newDistance = THREE.MathUtils.lerp(startDistance, targetDistance, progress);
+                
+                controls.setAzimuthalAngle(newAzimuthal);
+                controls.setPolarAngle(newPolar);
+                camera.position.copy(camera.position.clone().normalize().multiplyScalar(newDistance));
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    setTarget(null);
+                    controls.enabled = true;
+                }
+            };
+            
+            animationFrameId = requestAnimationFrame(animate);
+            
+            return () => {
+                cancelAnimationFrame(animationFrameId);
+            };
+        }
+    }, [target, camera]);
 
-            camera.position.lerp(cameraPosition, 0.1);
-            // controlsRef.current.target.lerp(targetPosition, 0.05); // Keep target at center
-
-            if (camera.position.distanceTo(cameraPosition) < 0.1) {
-                setTarget(null);
-                controlsRef.current.enabled = true;
-                controlsRef.current.update();
-            }
-        } else if (controlsRef.current) {
+    useFrame(() => {
+        if (controlsRef.current) {
+            controlsRef.current.autoRotate = isAutoRotating && !target;
             controlsRef.current.update();
         }
     });
@@ -210,15 +270,31 @@ const SceneWrapper = forwardRef(({ globeMode, userTravelData, homeCountry, onPoi
     return (
         <>
             <Stars radius={200} depth={50} count={8000} factor={5} saturation={0} fade speed={1} />
-            <Globe globeMode={globeMode} userTravelData={userTravelData} homeCountry={homeCountry} onPointClick={(point) => { onPointClick(point); setTarget({ lat: point.lat, lng: point.lng, altitude: 2.2 }); }} />
+            <Globe globeMode={globeMode} userTravelData={userTravelData} homeCountry={homeCountry} 
+                onPointClick={(point) => { 
+                    onPointClick(point); 
+                    const lng = point.lng;
+                    const lat = point.lat;
+                    setTarget({
+                        lat: lat,
+                        lng: lng,
+                        altitude: 3.0,
+                        angles: {
+                            azimuthal: -lng * Math.PI / 180,
+                            polar: (90 - lat) * Math.PI / 180
+                        }
+                    });
+                }} 
+                onLineClick={onLineClick} 
+            />
             <OrbitControls ref={controlsRef} target={[0, 0, 0]} enablePan={false} enableZoom enableRotate minDistance={12} maxDistance={100} autoRotate={!target} autoRotateSpeed={0.3} />
         </>
     );
 });
 
-const R3FGlobe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick }, ref) => (
-    <Canvas camera={{ position: [0, 10, 35], fov: 40 }}>
-        <SceneWrapper ref={ref} globeMode={globeMode} userTravelData={userTravelData} homeCountry={homeCountry} onPointClick={onPointClick} />
+const R3FGlobe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick, onLineClick }, ref) => (
+    <Canvas camera={{ position: [0, 0, 35], fov: 40 }}>
+        <SceneWrapper ref={ref} globeMode={globeMode} userTravelData={userTravelData} homeCountry={homeCountry} onPointClick={onPointClick} onLineClick={onLineClick} />
     </Canvas>
 ));
 

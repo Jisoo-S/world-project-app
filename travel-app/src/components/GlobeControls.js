@@ -54,8 +54,9 @@ const GlobeControls = ({
 
   const handleContinentClick = (continent, countries) => {
     const visitedCountries = countries.filter(country => userTravelData[country]);
+    const continentAltitude = 5.0; // More zoomed out for continents
     if (visitedCountries.length > 0) {
-      goToCountry(visitedCountries[0]);
+      goToCountry(visitedCountries[0], continentAltitude);
     } else {
       const continentCoords = {
         'Asia': [35, 100],
@@ -69,7 +70,7 @@ const GlobeControls = ({
         globeRef.current.pointOfView({ 
           lat: continentCoords[continent][0], 
           lng: continentCoords[continent][1], 
-          altitude: 2.0 
+          altitude: continentAltitude 
         });
       }
     }

@@ -29,7 +29,7 @@ const UltraRealisticGlobe = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 768 || window.innerHeight < window.innerWidth);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -135,6 +135,7 @@ const UltraRealisticGlobe = () => {
   const loadUserData = async (userId) => {
     setIsLoading(true);
     setLoadingStatus('사용자 데이터 로딩 중...');
+    const loadedTravelData = {};
     try {
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
@@ -153,7 +154,6 @@ const UltraRealisticGlobe = () => {
         .order('start_date', { ascending: true });
 
       if (travels && !travelsError) {
-        const loadedTravelData = {};
         travels.forEach(travel => {
           const countryEnglishName = travel.country;
           if (!loadedTravelData[countryEnglishName]) {
@@ -190,6 +190,7 @@ const UltraRealisticGlobe = () => {
         setIsLoading(false);
         if(isInitialLoad) setIsInitialLoad(false);
     }
+    return loadedTravelData;
   };
 
   const saveToSupabase = async (countryEnglishName, tripData) => {
@@ -259,9 +260,21 @@ const UltraRealisticGlobe = () => {
     };
 
     await updateInSupabase(editingTrip.id, newTripData);
-    await loadUserData(user.id);
+    const newTravelDataResult = await loadUserData(user.id);
     setEditingTrip(null);
-    setSelectedCountry(null);
+
+    if (selectedCountry) {
+        const updatedCountryData = newTravelDataResult[selectedCountry.country];
+        if (updatedCountryData) {
+            setSelectedCountry(prev => ({
+                ...prev,
+                trips: updatedCountryData.trips,
+                visits: updatedCountryData.visits,
+                cities: updatedCountryData.cities,
+                lastVisit: updatedCountryData.lastVisit
+            }));
+        }
+    }
   };
 
   const addTravelDestination = async () => {
@@ -345,6 +358,12 @@ const UltraRealisticGlobe = () => {
   const handlePointClick = (point) => {
       setSelectedCountry(point);
       setSelectedLine(null);
+  };
+
+  const handleLineClick = (line) => {
+    console.log('Line clicked:', line);
+    setSelectedLine(line);
+    setSelectedCountry(null);
   };
 
   const getTravelStats = () => {
@@ -495,13 +514,14 @@ const UltraRealisticGlobe = () => {
             userTravelData={userTravelData}
             homeCountry={homeCountry}
             onPointClick={handlePointClick}
+            onLineClick={handleLineClick}
         />
       </div>
 
       <LoadingScreen isLoading={isInitialLoad || isLoading} loadingStatus={loadingStatus} />
 
       {/* 로그인 버튼 및 사용자 정보 + 설정 버튼 */}
-      {window.innerWidth <= 768 ? (
+      {isMobile ? (
         // 모바일: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
         <div className="absolute bottom-6 left-6 z-10 flex gap-2">
           {user && !selectedLine && !selectedCountry ? (
