@@ -18,6 +18,32 @@ function latLngToVector3(lat, lng, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // 지구 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function getArcHeight(lat1, lng1, lat2, lng2) {
+  const distance = haversineDistance(lat1, lng1, lat2, lng2);
+  // 웹 버전 값을 THREE.js 환경에 맞게 2배 증폭
+  if (distance > 18000) return 2.0;      // 1.3
+  else if (distance > 16000) return 1.7;
+  else if (distance > 13000) return 1.2;  // 1.0
+  else if (distance > 10000) return 1.0;  // 0.6
+  else if (distance > 8000) return 0.7;  // 0.5
+  else if (distance > 6000) return 0.6;   // 0.4
+  else if (distance > 4000) return 0.3;  // 0.3
+  else if (distance > 2000) return 0.24;  // 0.24
+  else if (distance > 1000) return 0.1;  // 0.1
+  else return 0.05;                      // 0.03
+}
+
 const TravelMarker = ({ point, onPointClick, onPointerOver, onPointerOut }) => {
     const meshRef = useRef();
     const [isHovered, setIsHovered] = useState(false);
@@ -131,12 +157,14 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                     const endPos = latLngToVector3(endCoords[0], endCoords[1], 10.1);
                     const distance = startPos.distanceTo(endPos);
                     
-                    // 거리에 따라 높이 조정 (먼 거리일수록 더 높게)
-                    const heightMultiplier = 0.15 + (distance / 20) * 0.8;
+                    // 웹 버전처럼 heightMultiplier를 직접 높이 비율로 사용
+                    const heightMultiplier = getArcHeight(startCoords[0], startCoords[1], endCoords[0], endCoords[1]);
+                    const arcHeight = 10 * (1 + heightMultiplier* 0.8); // 10 * (1 + 0.015~1.3)
+                    
                     const mid = new THREE.Vector3().addVectors(startPos, endPos)
                         .multiplyScalar(0.5)
                         .normalize()
-                        .multiplyScalar(10 + distance * heightMultiplier);
+                        .multiplyScalar(arcHeight);
                     
                     const curve = new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
                     curve.userData = { 
@@ -237,7 +265,7 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                 <meshStandardMaterial map={currentTexture} bumpMap={bumpMap} bumpScale={0.05} metalness={0.1} roughness={0.7} />
             </mesh>
             {travelPoints.map(point => <TravelMarker key={point.country} point={point} onPointClick={onPointClick} onPointerOver={setHoveredPoint} onPointerOut={() => setHoveredPoint(null)} /> )}
-            {travelArcs.map((curve, index) => <Line key={index} points={curve.getPoints(50)} color="#60a5fa" lineWidth={4} transparent opacity={0.9} onPointerDown={(e) => { e.stopPropagation(); onLineClick(curve.userData); }} /> )}
+            {travelArcs.map((curve, index) => <Line key={index} points={curve.getPoints(150)} color="#60a5fa" lineWidth={5} transparent opacity={1.0} onPointerDown={(e) => { e.stopPropagation(); onLineClick(curve.userData); }} /> )}
         </group>
     );
 });

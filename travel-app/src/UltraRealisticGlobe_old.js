@@ -26,13 +26,31 @@ const UltraRealisticGlobe = () => {
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [renderKey, setRenderKey] = useState(0); // 강제 리렌더링용
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768 || window.innerHeight < window.innerWidth);
+      const newIsMobile = window.innerWidth <= 768 || window.innerHeight < window.innerWidth;
+      setIsMobile(newIsMobile);
+      setRenderKey(prev => prev + 1); // 강제 리렌더링
     };
+    
+    const handleOrientationChange = () => {
+      // 화면 회전 시 강제 리렌더링
+      setTimeout(() => {
+        const newIsMobile = window.innerWidth <= 768 || window.innerHeight < window.innerWidth;
+        setIsMobile(newIsMobile);
+        setRenderKey(prev => prev + 1); // 강제 리렌더링
+      }, 150);
+    };
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
   }, []);
   
   const [userTravelData, setUserTravelData] = useState({});
@@ -587,6 +605,7 @@ const UltraRealisticGlobe = () => {
       )}
 
       <GlobeControls 
+        key={`globe-controls-${renderKey}`}
         globeMode={globeMode}
         changeGlobeMode={changeGlobeMode}
         zoomLevel={zoomLevel}
@@ -603,6 +622,7 @@ const UltraRealisticGlobe = () => {
       />
 
       <TravelStatsPanel 
+        key={`travel-stats-${renderKey}`}
         showMobileStats={showMobileStats}
         setShowMobileStats={setShowMobileStats}
         stats={stats}
