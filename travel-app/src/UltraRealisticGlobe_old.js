@@ -333,9 +333,9 @@ const UltraRealisticGlobe = () => {
     setSelectedCountry(null);
   };
 
-  const goToCountry = (countryEnglishName) => {
+  const goToCountry = (countryEnglishName, altitude) => {
     if (globeRef.current) {
-      globeRef.current.goToCountry(countryEnglishName);
+      globeRef.current.goToCountry(countryEnglishName, altitude);
     }
   };
 
@@ -631,6 +631,7 @@ const UltraRealisticGlobe = () => {
         selectedLineIndex={selectedLineIndex}
         setSelectedLineIndex={setSelectedLineIndex}
         lineInfoRef={lineInfoRef}
+        homeCountry={homeCountry}
       />
 
       <AddTravelModal 

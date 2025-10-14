@@ -6,15 +6,21 @@ const LineInfoPanel = ({
   setSelectedLine, 
   selectedLineIndex, 
   setSelectedLineIndex, 
-  lineInfoRef 
+  lineInfoRef,
+  homeCountry
 }) => {
   if (!selectedLine || !selectedLine.trips || selectedLine.trips.length === 0) return null;
 
-  const currentTrip = selectedLine.trips[selectedLineIndex] || selectedLine.trips[0];
-  const hasMultipleTrips = selectedLine.trips.length > 1;
+  // 최근 여행이 먼저 오도록 정렬 (날짜 기준 내림차순)
+  const sortedTrips = [...selectedLine.trips].sort((a, b) => 
+    new Date(b.startDate) - new Date(a.startDate)
+  );
+
+  const currentTrip = sortedTrips[selectedLineIndex] || sortedTrips[0];
+  const hasMultipleTrips = sortedTrips.length > 1;
 
   const handlePrevTrip = () => {
-    if (selectedLineIndex < selectedLine.trips.length - 1) {
+    if (selectedLineIndex < sortedTrips.length - 1) {
       setSelectedLineIndex(selectedLineIndex + 1);
     }
   };
@@ -24,6 +30,25 @@ const LineInfoPanel = ({
       setSelectedLineIndex(selectedLineIndex - 1);
     }
   };
+
+  // 국가 표시 순서 결정
+  let displayStartCountry = selectedLine.startCountry;
+  let displayEndCountry = selectedLine.endCountry;
+  
+  const defaultHomeCountry = homeCountry || 'South Korea';
+  
+  // 홈국가가 포함되지 않은 경우에만 한글 이름 기준 정렬
+  const isHomeConnection = displayStartCountry === defaultHomeCountry || displayEndCountry === defaultHomeCountry;
+  
+  if (!isHomeConnection) {
+    // 여행 국가끼리 연결된 경우, 한글 이름 기준 ㄱㄴㄷ 순 정렬
+    const startKoreanName = countryData[displayStartCountry]?.koreanName || displayStartCountry;
+    const endKoreanName = countryData[displayEndCountry]?.koreanName || displayEndCountry;
+    
+    if (startKoreanName > endKoreanName) {
+      [displayStartCountry, displayEndCountry] = [displayEndCountry, displayStartCountry];
+    }
+  }
 
   return (
     <div 
@@ -44,9 +69,9 @@ const LineInfoPanel = ({
         {hasMultipleTrips && (
           <button
             onClick={handlePrevTrip}
-            disabled={selectedLineIndex >= selectedLine.trips.length - 1}
+            disabled={selectedLineIndex >= sortedTrips.length - 1}
             className={`text-white text-xl transition-colors ${
-              selectedLineIndex >= selectedLine.trips.length - 1 
+              selectedLineIndex >= sortedTrips.length - 1 
                 ? 'opacity-30 cursor-not-allowed' 
                 : 'hover:text-blue-400'
             }`}
@@ -57,14 +82,14 @@ const LineInfoPanel = ({
         
         <div>
           <div className="text-white font-bold text-md mb-1">
-            {countryData[selectedLine.startCountry]?.koreanName || selectedLine.startCountry} - {countryData[selectedLine.endCountry]?.koreanName || selectedLine.endCountry}
+            {countryData[displayStartCountry]?.koreanName || displayStartCountry} - {countryData[displayEndCountry]?.koreanName || displayEndCountry}
           </div>
           <div className="text-slate-400 text-sm">
             {currentTrip.startDate} ~ {currentTrip.endDate}
           </div>
           {hasMultipleTrips && (
             <div className="text-slate-500 text-xs mt-1">
-              {selectedLineIndex + 1} / {selectedLine.trips.length} 여행
+              {selectedLineIndex + 1} / {sortedTrips.length} 여행
             </div>
           )}
         </div>

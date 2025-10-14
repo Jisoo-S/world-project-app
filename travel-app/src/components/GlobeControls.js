@@ -53,26 +53,21 @@ const GlobeControls = ({
   ];
 
   const handleContinentClick = (continent, countries) => {
-    const visitedCountries = countries.filter(country => userTravelData[country]);
     const continentAltitude = 5.0; // More zoomed out for continents
-    if (visitedCountries.length > 0) {
-      goToCountry(visitedCountries[0], continentAltitude);
-    } else {
-      const continentCoords = {
-        'Asia': [35, 100],
-        'Europe': [50, 10],
-        'North America': [45, -100],
-        'South America': [-15, -60],
-        'Africa': [0, 20],
-        'Oceania': [-25, 140]
-      };
-      if (globeRef.current && continentCoords[continent]) {
-        globeRef.current.pointOfView({ 
-          lat: continentCoords[continent][0], 
-          lng: continentCoords[continent][1], 
-          altitude: continentAltitude 
-        });
-      }
+    const continentCoords = {
+      'Asia': [34, 100],           // 중국 중부
+      'Europe': [54, 25],          // 동유럽 중심
+      'North America': [54, -105], // 캐나다-미국 중심
+      'South America': [-8, -55],  // 브라질 중심
+      'Africa': [1, 20],           // 중앙아프리카
+      'Oceania': [-25, 135]        // 호주 중심
+    };
+    if (globeRef.current && continentCoords[continent]) {
+      globeRef.current.pointOfView({ 
+        lat: continentCoords[continent][0], 
+        lng: continentCoords[continent][1], 
+        altitude: continentAltitude 
+      });
     }
     // 모든 모바일 환경(세로, 가로 포함)에서 패널 닫기
     if (isAnyMobile) {
