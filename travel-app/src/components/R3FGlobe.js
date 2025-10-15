@@ -33,7 +33,7 @@ function getArcHeight(lat1, lng1, lat2, lng2) {
   const distance = haversineDistance(lat1, lng1, lat2, lng2);
   // 웹 버전 값을 THREE.js 환경에 맞게 2배 증폭
   if (distance > 18000) return 2.0;      // 1.3
-  else if (distance > 16000) return 1.7;
+  else if (distance > 16000) return 1.7;  // 16000 이상은 높이 유지하고 곡선 형태로 완만하게
   else if (distance > 13000) return 1.2;  // 1.0
   else if (distance > 10000) return 1.0;  // 0.6
   else if (distance > 8000) return 0.7;  // 0.5
@@ -155,18 +155,37 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                     // 새 경로 생성
                     const startPos = latLngToVector3(startCoords[0], startCoords[1], 10.1);
                     const endPos = latLngToVector3(endCoords[0], endCoords[1], 10.1);
-                    const distance = startPos.distanceTo(endPos);
+                    const distance = haversineDistance(startCoords[0], startCoords[1], endCoords[0], endCoords[1]);
                     
                     // 웹 버전처럼 heightMultiplier를 직접 높이 비율로 사용
                     const heightMultiplier = getArcHeight(startCoords[0], startCoords[1], endCoords[0], endCoords[1]);
-                    const arcHeight = 10 * (1 + heightMultiplier* 0.8); // 10 * (1 + 0.015~1.3)
+                    const arcHeight = 10 * (1 + heightMultiplier * 0.8);
                     
-                    const mid = new THREE.Vector3().addVectors(startPos, endPos)
-                        .multiplyScalar(0.5)
-                        .normalize()
-                        .multiplyScalar(arcHeight);
+                    let curve;
                     
-                    const curve = new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
+                    // 13000km 이상의 거리는 CubicBezierCurve3로 부드러운 U자 곡선 생성 (끊김 방지)
+                    if (distance > 13000) {
+                        // 제어점 1: 시작점에서 45% 지점, 높이는 arcHeight의 82%
+                        const control1 = new THREE.Vector3().lerpVectors(startPos, endPos, 0.45)
+                            .normalize()
+                            .multiplyScalar(arcHeight * 0.80);
+                        
+                        // 제어점 2: 시작점에서 55% 지점, 높이는 arcHeight의 82%
+                        const control2 = new THREE.Vector3().lerpVectors(startPos, endPos, 0.55)
+                            .normalize()
+                            .multiplyScalar(arcHeight * 0.80);
+                        
+                        curve = new THREE.CubicBezierCurve3(startPos, control1, control2, endPos);
+                    } else {
+                        // 13000km 이하는 기존 QuadraticBezierCurve3 사용
+                        const mid = new THREE.Vector3().addVectors(startPos, endPos)
+                            .multiplyScalar(0.5)
+                            .normalize()
+                            .multiplyScalar(arcHeight);
+                        
+                        curve = new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
+                    }
+                    
                     curve.userData = { 
                         startCountry: startCountry, 
                         endCountry: endCountry, 
@@ -179,6 +198,7 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
             // 각 여행에 대해 연결 처리
             allTripsFlat.forEach((currentTrip) => {
                 let connectedToCountry = null;
+                let isOverlapping = false; // overlapping 여행인지 추적
                 
                 // 1. 다른 여행의 기간 내에 속하는지 확인
                 const overlappingTrip = allTripsFlat.find(trip => {
@@ -192,6 +212,7 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                 
                 if (overlappingTrip) {
                     connectedToCountry = overlappingTrip.country;
+                    isOverlapping = true; // overlapping 여행으로 표시
                     addOrUpdateRoute(
                         overlappingTrip.country,
                         currentTrip.country,
@@ -232,7 +253,8 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                 }
                 
                 // 4. 현재 여행이 끝난 후 홈 국가로 돌아가는 선 추가
-                if (connectedToCountry) {
+                // overlapping 여행은 홈국가 연결을 만들지 않음
+                if (connectedToCountry && !isOverlapping) {
                     const nextTrip = allTripsFlat.find(trip => 
                         trip.id !== currentTrip.id && trip.startDate === currentTrip.endDate
                     );
