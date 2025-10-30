@@ -26,23 +26,38 @@ const UltraRealisticGlobe = () => {
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isIPad, setIsIPad] = useState(false); // iPad 감지용 추가
   const [renderKey, setRenderKey] = useState(0); // 강제 리렌더링용
 
   useEffect(() => {
+    // iPad 감지 함수
+    const checkIsIPad = () => {
+      return (navigator.userAgent.match(/iPad/i) || 
+              (navigator.userAgent.match(/Mac/i) && 'ontouchend' in document) ||
+              (window.innerWidth >= 768 && window.innerWidth <= 1366 && 'ontouchend' in document));
+    };
+
     const handleResize = () => {
-      const newIsMobile = window.innerWidth <= 768 || window.innerHeight < window.innerWidth;
+      const newIsMobile = window.innerWidth <= 768 && !checkIsIPad();
+      const newIsIPad = checkIsIPad();
       setIsMobile(newIsMobile);
+      setIsIPad(newIsIPad);
       setRenderKey(prev => prev + 1); // 강제 리렌더링
     };
     
     const handleOrientationChange = () => {
       // 화면 회전 시 강제 리렌더링
       setTimeout(() => {
-        const newIsMobile = window.innerWidth <= 768 || window.innerHeight < window.innerWidth;
+        const newIsMobile = window.innerWidth <= 768 && !checkIsIPad();
+        const newIsIPad = checkIsIPad();
         setIsMobile(newIsMobile);
+        setIsIPad(newIsIPad);
         setRenderKey(prev => prev + 1); // 강제 리렌더링
       }, 150);
     };
+    
+    // 초기 실행
+    handleResize();
     
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
@@ -539,10 +554,10 @@ const UltraRealisticGlobe = () => {
       <LoadingScreen isLoading={isInitialLoad || isLoading} loadingStatus={loadingStatus} />
 
       {/* 로그인 버튼 및 사용자 정보 + 설정 버튼 */}
-      {isMobile ? (
-        // 모바일: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
+      {(isMobile || isIPad) ? (
+        // 모바일 및 iPad: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
         <div className="absolute bottom-6 left-6 z-10 flex gap-2">
-          {user && !selectedLine && !selectedCountry ? (
+          {user ? (
             <>
               <button
                 onClick={handleSignOut}
@@ -558,21 +573,19 @@ const UltraRealisticGlobe = () => {
               </button>
             </>
           ) : (
-            !selectedLine && !selectedCountry && (
             <button
               onClick={() => setShowAuth(true)}
               className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
             >
               Sign In
             </button>
-            )
           )}
         </div>
       ) : (
         // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
         <>
           <div className="absolute top-6 right-20 z-10">
-            {user && !selectedLine && !selectedCountry ? (
+            {user ? (
               <button
                 onClick={handleSignOut}
                 className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
@@ -580,18 +593,16 @@ const UltraRealisticGlobe = () => {
                 Sign Out
               </button>
             ) : (
-              !selectedLine && !selectedCountry && (
               <button
                 onClick={() => setShowAuth(true)}
                 className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
               >
                 Sign In
               </button>
-              )
             )}
           </div>
           {/* 데스크톱: 왼쪽 하단에 설정 버튼 */}
-          {user && !selectedLine && !selectedCountry && (
+          {user && (
             <div className="absolute bottom-6 left-6 z-10">
               <button
                 onClick={() => setShowSettings(true)}
