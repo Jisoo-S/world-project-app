@@ -15,13 +15,16 @@ const GlobeControls = ({
   selectedLine,
   selectedCountry
 }) => {
+  // iPhone 감지
+  const isIPhone = navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPod/i);
+  
   const isMobile = window.innerWidth <= 768;
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   // 아이폰 프로맥스 등 큰 모바일 기기 감지
   const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 950 && isLandscape && 'ontouchstart' in window;
-  // 전체 모바일 감지 (작은 모바일 + 큰 모바일)
-  const isAnyMobile = isMobile || isLargeMobileLandscape;
+  // iPhone이면 항상 모바일로 처리, 아니면 기존 로직
+  const isAnyMobile = isIPhone ? true : (isMobile || isLargeMobileLandscape);
   const continentPanelRef = useRef(null);
 
   // 외부 클릭 감지 (모바일 대륙 패널)
@@ -78,22 +81,27 @@ const GlobeControls = ({
   return (
     <>
       {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute z-10 ${
-        isMobile 
-          ? isLandscape 
-            ? 'top-6 left-32'  // 가로모드일 때 더 오른쪽으로 이동 (left-20 -> left-32)
-            : 'top-14 left-3'  // 세로모드일 때만 더 위로 올림
-          : 'top-6 left-6'    // 데스크톱은 그대로
+      <div className={`absolute z-10
+        // 1. 기본 스타일 (모바일 세로/가로 모드)
+        top-14 left-3 
+  
+        // 2. 640px 이상 (sm: breakpoint)에서는 가로 모드 레이아웃 적용
+        sm:top-6 sm:left-6
+  
+        // 3. 768px 이상 (md: breakpoint, iPad 또는 데스크톱)에서는 최종 데스크톱 레이아웃 적용
+        md:top-6 md:left-6
       }`}>
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
-          isMobile 
-            ? isMobileLandscape 
-              ? 'rounded-xl p-2.5 w-24 mobile-landscape-mode-box' 
-              : 'rounded-xl p-2.5 w-24'
-            : isLargeMobileLandscape
-              ? 'rounded-xl p-2.5 w-24 iphone-pro-landscape-mode-box'
-              : 'rounded-2xl p-4 w-40'
+          isIPhone 
+            ? 'rounded-xl p-2.5 w-24'  // iPhone이면 항상 모바일 크기
+            : isMobile 
+              ? isMobileLandscape 
+                ? 'rounded-xl p-2.5 w-24 mobile-landscape-mode-box' 
+                : 'rounded-xl p-2.5 w-24'
+              : isLargeMobileLandscape
+                ? 'rounded-xl p-2.5 w-24 iphone-pro-landscape-mode-box'
+                : 'rounded-2xl p-4 w-40'
         }`}>
           <div className={`text-white font-medium mb-2 ${
             isAnyMobile ? 'text-xs' : 'text-sm font-bold mb-3'

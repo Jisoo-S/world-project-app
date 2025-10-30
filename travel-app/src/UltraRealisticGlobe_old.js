@@ -25,33 +25,86 @@ const UltraRealisticGlobe = () => {
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(() => {
+    // 초기값 설정 시 iPhone 체크
+    const ua = navigator.userAgent;
+    if (ua.match(/iPhone/i) || ua.match(/iPod/i)) return true;
+    return window.innerWidth <= 768;
+  });
   const [isIPad, setIsIPad] = useState(false); // iPad 감지용 추가
   const [renderKey, setRenderKey] = useState(0); // 강제 리렌더링용
 
   useEffect(() => {
-    // iPad 감지 함수
+    // iPhone 감지 함수
+    const checkIsIPhone = () => {
+      const ua = navigator.userAgent;
+      // iPhone 감지 (모든 아이폰 포함)
+      if (ua.match(/iPhone/i)) return true;
+      // iPod Touch도 아이폰처럼 처리
+      if (ua.match(/iPod/i)) return true;
+      return false;
+    };
+    
+    // iPad 감지 함수 - iPhone이 아닌 경우만
     const checkIsIPad = () => {
-      return (navigator.userAgent.match(/iPad/i) || 
-              (navigator.userAgent.match(/Mac/i) && 'ontouchend' in document) ||
-              (window.innerWidth >= 768 && window.innerWidth <= 1366 && 'ontouchend' in document));
+      if (checkIsIPhone()) return false; // iPhone이면 iPad가 아님
+      
+      const ua = navigator.userAgent;
+      // iPad 감지 방법들
+      if (ua.match(/iPad/i)) return true;
+      
+      // iOS 13+ iPad는 Mac으로 보고
+      if (ua.match(/Mac/i) && navigator.maxTouchPoints > 1) return true;
+      
+      // iPad Pro의 경우
+      if (ua.indexOf('Macintosh') > -1 && 'ontouchend' in document) return true;
+      
+      return false;
     };
 
     const handleResize = () => {
-      const newIsMobile = window.innerWidth <= 768 && !checkIsIPad();
-      const newIsIPad = checkIsIPad();
-      setIsMobile(newIsMobile);
-      setIsIPad(newIsIPad);
+      const isIPhone = checkIsIPhone();
+      const isIPadDevice = checkIsIPad();
+      
+      // iPhone이면 무조건 모바일 UI (화면 크기 무관)
+      if (isIPhone) {
+        setIsMobile(true);
+        setIsIPad(false);
+      }
+      // iPad면 무조건 iPad UI
+      else if (isIPadDevice) {
+        setIsMobile(false);
+        setIsIPad(true);
+      }
+      // 나머지는 화면 크기로 판단
+      else {
+        setIsMobile(window.innerWidth <= 768);
+        setIsIPad(false);
+      }
       setRenderKey(prev => prev + 1); // 강제 리렌더링
     };
     
     const handleOrientationChange = () => {
       // 화면 회전 시 강제 리렌더링
       setTimeout(() => {
-        const newIsMobile = window.innerWidth <= 768 && !checkIsIPad();
-        const newIsIPad = checkIsIPad();
-        setIsMobile(newIsMobile);
-        setIsIPad(newIsIPad);
+        const isIPhone = checkIsIPhone();
+        const isIPadDevice = checkIsIPad();
+        
+        // iPhone이면 무조건 모바일 UI (화면 크기 무관)
+        if (isIPhone) {
+          setIsMobile(true);
+          setIsIPad(false);
+        }
+        // iPad면 무조건 iPad UI
+        else if (isIPadDevice) {
+          setIsMobile(false);
+          setIsIPad(true);
+        }
+        // 나머지는 화면 크기로 판단
+        else {
+          setIsMobile(window.innerWidth <= 768);
+          setIsIPad(false);
+        }
         setRenderKey(prev => prev + 1); // 강제 리렌더링
       }, 150);
     };
