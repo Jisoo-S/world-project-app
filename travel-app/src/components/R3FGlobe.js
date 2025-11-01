@@ -279,8 +279,8 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
 
     return (
         <group ref={ref}>
-            <ambientLight intensity={globeMode === 'night' ? 0.1 : 0.6} />
-            <directionalLight position={[10, 10, 5]} intensity={globeMode === 'night' ? 0.3 : 1.2} />
+            <ambientLight intensity={globeMode === 'night' ? 0.5 : 0.6} />
+            <directionalLight position={[10, 10, 5]} intensity={globeMode === 'night' ? 1.0 : 1.2} />
             <Atmosphere />
             <mesh>
                 <sphereGeometry args={[10, 64, 64]} />
