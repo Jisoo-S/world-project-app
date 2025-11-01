@@ -87,7 +87,7 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={handleOverlayClick}>
       <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/20 ${
         (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-modal' : 
-        (window.innerWidth > 768 && window.innerWidth <= 950 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
+        (window.innerWidth > 768 && window.innerWidth <= 1024 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
         ''
       }`} ref={modalContentRef} onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">

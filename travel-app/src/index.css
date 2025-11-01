@@ -175,7 +175,7 @@ code {
 }
 
 /* 아이폰 프로/프로맥스 등 큰 모바일 기기 전용 가로 모드 최적화 */
-@media (min-width: 769px) and (max-width: 950px) and (orientation: landscape) and (pointer: coarse) {
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) and (pointer: coarse) {
   /* 터치 디바이스이면서 가로 모드인 경우에만 적용 */
   .iphone-pro-landscape-modal {
     max-height: 80vh !important;

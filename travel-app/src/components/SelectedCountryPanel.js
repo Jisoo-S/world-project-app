@@ -13,7 +13,7 @@ const SelectedCountryPanel = ({
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   // 아이폰 프로맥스 등 큰 모바일 기기 감지
-  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 950 && isLandscape && 'ontouchstart' in window;
+  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 1024 && isLandscape && 'ontouchstart' in window;
   const panelRef = useRef(null);
 
   // 외부 클릭 감지
