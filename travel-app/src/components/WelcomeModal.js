@@ -23,7 +23,7 @@ const WelcomeModal = ({ show, onClose, onSignIn }) => {
           {/* X 버튼 */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors duration-200 z-10"
+            className="absolute top-4 right-2 text-gray-400 hover:text-white transition-colors duration-200 z-10"
             aria-label="닫기"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
