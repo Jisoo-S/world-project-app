@@ -10,6 +10,7 @@ import SettingsModal from './components/SettingsModal';
 import LineInfoPanel from './components/LineInfoPanel';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import ConfirmModal from './components/ConfirmModal';
+import WelcomeModal from './components/WelcomeModal';
 import { supabase } from './supabaseClient';
 import R3FGlobe from './components/R3FGlobe';
 
@@ -146,6 +147,7 @@ const UltraRealisticGlobe = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTripData, setDeleteTripData] = useState(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
 
   useEffect(() => {
@@ -201,6 +203,8 @@ const UltraRealisticGlobe = () => {
         loadUserData(session.user.id);
       } else {
         setIsInitialLoad(false);
+        // 로그인하지 않은 사용자에게 환영 모달 표시
+        setShowWelcomeModal(true);
       }
     });
 
@@ -208,10 +212,14 @@ const UltraRealisticGlobe = () => {
       if (session?.user) {
         setUser(session.user);
         loadUserData(session.user.id);
+        // 로그인 성공 시 환영 모달 닫기
+        setShowWelcomeModal(false);
       } else {
         setUser(null);
         setUserTravelData({});
         setHomeCountry('South Korea');
+        // 로그아웃 시 환영 모달 표시
+        setShowWelcomeModal(true);
       }
     });
 
@@ -777,6 +785,15 @@ const UltraRealisticGlobe = () => {
         user={user}
         homeCountry={homeCountry}
         setHomeCountry={setHomeCountry}
+      />
+
+      <WelcomeModal
+        show={showWelcomeModal}
+        onClose={() => setShowWelcomeModal(false)}
+        onSignIn={() => {
+          setShowWelcomeModal(false);
+          setShowAuth(true);
+        }}
       />
 
       {/* ... styles ... */}
