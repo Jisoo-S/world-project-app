@@ -53,7 +53,7 @@ const WelcomeModal = ({ show, onClose, onSignIn }) => {
                   계정 등록
                 </h4>
                 <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                  <span className="text-yellow-400 font-semibold">원활한 여행 기록 저장을 위해 로그인이 필요해요!</span> ⚠️
+                  ⚠️ <span className="text-yellow-400 font-semibold">원활한 여행 기록 저장을 위해 로그인이 필요해요!</span>
                 </p>
                 <p className="text-sm sm:text-base text-gray-300 leading-relaxed mt-2">
                   아래 <span className="font-semibold text-blue-400">Sign In</span> 버튼을 눌러 간편하게 계정을 만들어보세요.
