@@ -159,29 +159,47 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                     
                     // 웹 버전처럼 heightMultiplier를 직접 높이 비율로 사용
                     const heightMultiplier = getArcHeight(startCoords[0], startCoords[1], endCoords[0], endCoords[1]);
-                    const arcHeight = 10 * (1 + heightMultiplier * 0.8);
+                    const arcHeight = 10 * (1 + heightMultiplier * 0.65);  // 0.8에서 0.65로 낮춤
                     
                     let curve;
                     
-                    // 13000km 이상의 거리는 CubicBezierCurve3로 부드러운 U자 곡선 생성 (끊김 방지)
+                    // ===== 진짜 구면 보간(Slerp)을 이용한 중간점 계산 =====
+                    // Slerp 공식: v(t) = (sin((1-t)*θ)/sin(θ)) * v0 + (sin(t*θ)/sin(θ)) * v1
+                    
+                    const startNorm = startPos.clone().normalize();
+                    const endNorm = endPos.clone().normalize();
+                    const angle = startNorm.angleTo(endNorm);
+                    const sinAngle = Math.sin(angle);
+                    
+                    // Slerp 함수
+                    const slerp = (v0, v1, t, angle, sinAngle) => {
+                        if (sinAngle < 0.001) {
+                            // 각도가 너무 작으면 선형 보간
+                            return new THREE.Vector3().lerpVectors(v0, v1, t);
+                        }
+                        const a = Math.sin((1 - t) * angle) / sinAngle;
+                        const b = Math.sin(t * angle) / sinAngle;
+                        return new THREE.Vector3(
+                            a * v0.x + b * v1.x,
+                            a * v0.y + b * v1.y,
+                            a * v0.z + b * v1.z
+                        );
+                    };
+                    
+                    // 13000km 이상의 거리는 CubicBezierCurve3로 부드러운 U자 곡선 생성
                     if (distance > 13000) {
-                        // 제어점 1: 시작점에서 45% 지점, 높이는 arcHeight의 82%
-                        const control1 = new THREE.Vector3().lerpVectors(startPos, endPos, 0.45)
-                            .normalize()
-                            .multiplyScalar(arcHeight * 0.80);
+                        // Slerp로 제어점 계산
+                        const control1Norm = slerp(startNorm, endNorm, 0.33, angle, sinAngle);
+                        const control2Norm = slerp(startNorm, endNorm, 0.67, angle, sinAngle);
                         
-                        // 제어점 2: 시작점에서 55% 지점, 높이는 arcHeight의 82%
-                        const control2 = new THREE.Vector3().lerpVectors(startPos, endPos, 0.55)
-                            .normalize()
-                            .multiplyScalar(arcHeight * 0.80);
+                        const control1 = control1Norm.multiplyScalar(arcHeight * 0.90);
+                        const control2 = control2Norm.multiplyScalar(arcHeight * 0.90);
                         
                         curve = new THREE.CubicBezierCurve3(startPos, control1, control2, endPos);
                     } else {
-                        // 13000km 이하는 기존 QuadraticBezierCurve3 사용
-                        const mid = new THREE.Vector3().addVectors(startPos, endPos)
-                            .multiplyScalar(0.5)
-                            .normalize()
-                            .multiplyScalar(arcHeight);
+                        // Slerp로 중간점 계산
+                        const midNorm = slerp(startNorm, endNorm, 0.5, angle, sinAngle);
+                        const mid = midNorm.multiplyScalar(arcHeight);
                         
                         curve = new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
                     }
