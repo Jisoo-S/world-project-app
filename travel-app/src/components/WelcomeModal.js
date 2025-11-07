@@ -75,6 +75,9 @@ const WelcomeModal = ({ show, onClose, onSignIn }) => {
                 <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                   로그인 완료 후 바로 여행 기록을 시작할 수 있어요.
                 </p>
+                <p className="text-[10px] sm:text-base text-gray-300 leading-relaxed mt-2">
+                  * 설정창(⚙️)에서 <span className="font-semibold text-blue-400">사용 방법</span>을 확인하고 더 편리하게 이용해 보세요.
+                </p>
               </div>
             </div>
           </div>

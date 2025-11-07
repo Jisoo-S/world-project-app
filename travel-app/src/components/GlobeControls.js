@@ -52,7 +52,7 @@ const GlobeControls = ({
     { continent: 'North America', flag: 'NA', countries: ['United States'], description: 'NA' },
     { continent: 'South America', flag: 'SA', countries: [], description: 'SA' },
     { continent: 'Africa', flag: 'AF', countries: [], description: 'AF' },
-    { continent: 'Oceania', flag: 'AU', countries: [], description: 'AU' }
+    { continent: 'Oceania', flag: 'OC', countries: [], description: 'OC' }
   ];
 
   const handleContinentClick = (continent, countries) => {
