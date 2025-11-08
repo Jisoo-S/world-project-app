@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { countryData } from '../data/countryData';
 import { supabase } from '../supabaseClient';
 import ConfirmModal from './ConfirmModal';
+import UserGuideModal from './UserGuideModal';
 
 const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHomeCountry, onSignOut }) => {
   const modalContentRef = useRef(null);
@@ -14,6 +15,7 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showFinalDeleteConfirm, setShowFinalDeleteConfirm] = useState(false);
   const [showWithdrawalComplete, setShowWithdrawalComplete] = useState(false);
+  const [showUserGuide, setShowUserGuide] = useState(false);
 
   useEffect(() => {
     setSelectedHomeCountry(homeCountry);
@@ -164,6 +166,19 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
               </button>
             </div>
           )}
+        </div>
+
+        {/* 사용 방법 */}
+        <div className="mb-6">
+          <label className="block text-white text-sm font-medium mb-2">
+            📖 사용 방법
+          </label>
+          <button
+            onClick={() => setShowUserGuide(true)}
+            className="w-full bg-slate-800 hover:bg-slate-600 text-white px-4 py-3 rounded-lg font-medium transition-all text-sm"
+          >
+            사용 방법
+          </button>
         </div>
 
         {/* 업데이트 메시지 */}
@@ -335,6 +350,12 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
         confirmText="확인"
         cancelText=""
         isDestructive={false}
+      />
+
+      {/* 사용 방법 안내 모달 */}
+      <UserGuideModal
+        show={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
       />
     </div>
   );
