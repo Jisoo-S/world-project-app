@@ -6,7 +6,7 @@ const UserGuideModal = ({ show, onClose }) => {
 
   const pages = [
     {
-      title: "🌍 앱 사용 안내",
+      title: "🌍 사용 방법",
       content: (
         <div className="space-y-4">
           <div className="bg-slate-800/50 rounded-lg p-4">
@@ -34,7 +34,7 @@ const UserGuideModal = ({ show, onClose }) => {
       )
     },
     {
-      title: "🌍 앱 사용 안내",
+      title: "🌍 사용 방법",
       content: (
         <div className="space-y-4">
           <div className="bg-slate-800/50 rounded-lg p-4">
@@ -61,7 +61,7 @@ const UserGuideModal = ({ show, onClose }) => {
       )
     },
     {
-      title: "🌍 앱 사용 안내",
+      title: "🌍 사용 방법",
       content: (
         <div className="space-y-4">
           <div className="bg-slate-800/50 rounded-lg p-4">
@@ -84,7 +84,7 @@ const UserGuideModal = ({ show, onClose }) => {
       )
     },
     {
-      title: "🌍 앱 사용 안내",
+      title: "🌍 사용 방법",
       content: (
         <div className="space-y-4">
           <div className="bg-slate-800/50 rounded-lg p-4">
@@ -127,7 +127,7 @@ const UserGuideModal = ({ show, onClose }) => {
       )
     },
     {
-      title: "🌍 앱 사용 안내",
+      title: "🌍 사용 방법",
       content: (
         <div className="space-y-4">
 
