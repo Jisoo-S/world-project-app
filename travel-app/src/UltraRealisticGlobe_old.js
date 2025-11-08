@@ -148,7 +148,16 @@ const UltraRealisticGlobe = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTripData, setDeleteTripData] = useState(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [hideBottomUI, setHideBottomUI] = useState(false); // 패널이 열릴 때 하단 UI 숨김
 
+  // selectedCountry나 selectedLine이 열리면 하단 UI 숨김
+  useEffect(() => {
+    if (selectedCountry || selectedLine) {
+      setHideBottomUI(true);
+    } else {
+      setHideBottomUI(false);
+    }
+  }, [selectedCountry, selectedLine]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -615,7 +624,7 @@ const UltraRealisticGlobe = () => {
       <LoadingScreen isLoading={isInitialLoad || isLoading} loadingStatus={loadingStatus} />
 
       {/* 로그인 버튼 및 사용자 정보 + 설정 버튼 */}
-      {(isMobile || isIPad) ? (
+      {!hideBottomUI && (isMobile || isIPad) ? (
         // 모바일 및 iPad: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
         <div className="absolute bottom-6 left-6 z-10 flex gap-2">
           {user ? (
@@ -642,7 +651,9 @@ const UltraRealisticGlobe = () => {
             </button>
           )}
         </div>
-      ) : (
+      ) : null}
+      
+      {!hideBottomUI && !(isMobile || isIPad) && (
         // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
         <>
           <div className="absolute top-6 right-20 z-10">

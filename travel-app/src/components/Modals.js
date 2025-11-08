@@ -485,10 +485,10 @@ export const AllTripsModal = ({
           <div className="mt-2 pt-2 border-t border-slate-700"> {/* Reduced mt and pt */}
             <div className="flex flex-wrap gap-6 text-sm text-slate-400">
               <div>
-                총 여행: <span className="text-blue-400 font-semibold">{allTrips.length}회</span>
+                총 여행: <span className="text-green-400 font-semibold">{allTrips.length}회</span>
               </div>
               <div>
-                총 국가: <span className="text-green-400 font-semibold">{Object.keys(userTravelData).length}개국</span>
+                총 국가: <span className="text-blue-400 font-semibold">{Object.keys(userTravelData).length}개국</span>
               </div>
               <div>
                 총 도시:{' '}
