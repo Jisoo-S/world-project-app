@@ -167,11 +167,11 @@ travel-app/
 - [Natural Earth](https://www.naturalearthdata.com/) - 고품질 지형 데이터
 - [NASA](https://www.nasa.gov/) - 실제 지구 위성 이미지
 
-## 📞 연락처
+## Open Source Notices
 
-프로젝트 관련 문의나 제안사항이 있으시면 언제든 연락해주세요!
+This project uses the following open-source library:
 
----
-
-**⭐ 이 프로젝트가 마음에 드신다면 스타를 눌러주세요!**
+- [three-globe](https://github.com/vasturiano/three-globe)  
+  Copyright (c) 2019 Vasco Asturiano  
+  Licensed under the MIT License
 
