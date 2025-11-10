@@ -181,8 +181,9 @@ const GlobeControls = ({
 
       {/* 컨트롤 패널 */}
       {isAnyMobile ? (
-        (selectedLine || selectedCountry) ? null : (
-          <div className="absolute bottom-6 right-6 z-10" ref={continentPanelRef}>
+        <div className={`absolute bottom-6 right-6 z-10 transition-opacity duration-300 ${
+          (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`} ref={continentPanelRef}>
             <button
               onClick={() => setShowContinentPanel(!showContinentPanel)}
               className="bg-slate-900/95 backdrop-blur-lg rounded-full shadow-2xl p-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
@@ -263,9 +264,10 @@ const GlobeControls = ({
               </div>
             )} 
           </div>
-        )
       ) : (
-        <div className="absolute bottom-6 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10">
+        <div className={`absolute bottom-6 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 transition-opacity duration-300 ${
+          (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}>
           <div className="flex gap-6">
             {/* 빠른 이동 - 대륙별 */}
             <div>
