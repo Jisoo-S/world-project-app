@@ -159,7 +159,7 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                     
                     // 웹 버전처럼 heightMultiplier를 직접 높이 비율로 사용
                     const heightMultiplier = getArcHeight(startCoords[0], startCoords[1], endCoords[0], endCoords[1]);
-                    const arcHeight = 10 * (1 + heightMultiplier * 0.55);  // 0.8에서 0.65로 낮춤
+                    const arcHeight = 10 * (1 + heightMultiplier * 0.6);  // 0.8에서 0.65로 낮춤
                     
                     let curve;
                     
