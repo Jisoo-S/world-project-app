@@ -163,6 +163,7 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                     
                     let curve;
                     
+                    
                     // ===== 진짜 구면 보간(Slerp)을 이용한 중간점 계산 =====
                     // Slerp 공식: v(t) = (sin((1-t)*θ)/sin(θ)) * v0 + (sin(t*θ)/sin(θ)) * v1
                     
