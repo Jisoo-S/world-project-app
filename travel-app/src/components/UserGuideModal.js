@@ -210,7 +210,7 @@ const UserGuideModal = ({ show, onClose }) => {
         </div>
 
         {/* 컨텐츠 영역 */}
-        <div className="mb-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+        <div className="mb-6 overflow-y-auto" style={{ height: '400px' }}>
           {pages[currentPage].content}
         </div>
 
