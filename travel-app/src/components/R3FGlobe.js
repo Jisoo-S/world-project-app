@@ -66,9 +66,16 @@ const TravelMarker = ({ point, onPointClick, onPointerOver, onPointerOut }) => {
 };
 
 const Atmosphere = () => (
-    <mesh scale={[1.05, 1.05, 1.05]}>
+    <mesh scale={[1.05, 1.05, 1.05]} renderOrder={-1}>
         <sphereGeometry args={[10, 64, 64]} />
-        <shaderMaterial transparent vertexShader={`varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`} fragmentShader={`varying vec3 vNormal; void main() { float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 2.0); gl_FragColor = vec4(0.3, 0.6, 1.0, 0.4) * intensity; }`} side={THREE.BackSide} blending={THREE.AdditiveBlending} />
+        <shaderMaterial 
+            transparent 
+            vertexShader={`varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`} 
+            fragmentShader={`varying vec3 vNormal; void main() { float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 2.0); gl_FragColor = vec4(0.3, 0.6, 1.0, 0.4) * intensity; }`} 
+            side={THREE.BackSide} 
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+        />
     </mesh>
 );
 
@@ -306,7 +313,7 @@ const Globe = forwardRef(({ globeMode, userTravelData, homeCountry, onPointClick
                 <meshStandardMaterial map={currentTexture} bumpMap={bumpMap} bumpScale={0.05} metalness={0.1} roughness={0.7} />
             </mesh>
             {travelPoints.map(point => <TravelMarker key={point.country} point={point} onPointClick={onPointClick} onPointerOver={setHoveredPoint} onPointerOut={() => setHoveredPoint(null)} /> )}
-            {travelArcs.map((curve, index) => <Line key={index} points={curve.getPoints(150)} color="#60a5fa" lineWidth={5} transparent opacity={1.0} onPointerDown={(e) => { e.stopPropagation(); onLineClick(curve.userData); }} /> )}
+            {travelArcs.map((curve, index) => <Line key={index} points={curve.getPoints(150)} color="#60a5fa" lineWidth={5} transparent opacity={1.0} renderOrder={1} onPointerDown={(e) => { e.stopPropagation(); onLineClick(curve.userData); }} /> )}
         </group>
     );
 });
