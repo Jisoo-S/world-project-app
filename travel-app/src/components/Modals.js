@@ -382,6 +382,13 @@ export const AllTripsModal = ({
     return diffDays;
   };
 
+  const totalTrips = allTrips.length;
+  const totalCountries = Object.keys(userTravelData).length;
+  const totalCities = Object.values(userTravelData).reduce(
+    (sum, data) => sum + data.cities.length,
+    0
+  );
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -483,18 +490,18 @@ export const AllTripsModal = ({
 
         {allTrips.length > 0 && (
           <div className="mt-2 pt-2 border-t border-slate-700"> {/* Reduced mt and pt */}
-            <div className="flex flex-wrap gap-6 text-sm text-slate-400">
-              <div>
-                총 여행: <span className="text-green-400 font-semibold">{allTrips.length}회</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-slate-400">
+              <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                <span>총 여행</span>
+                <span className="text-green-400 font-semibold">{totalTrips}회</span>
               </div>
-              <div>
-                총 국가: <span className="text-blue-400 font-semibold">{Object.keys(userTravelData).length}개국</span>
+              <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                <span>총 국가</span>
+                <span className="text-blue-400 font-semibold">{totalCountries}개국</span>
               </div>
-              <div>
-                총 도시:{' '}
-                <span className="text-purple-400 font-semibold">
-                  {Object.values(userTravelData).reduce((sum, data) => sum + data.cities.length, 0)}개
-                </span>
+              <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                <span>총 도시</span>
+                <span className="text-purple-400 font-semibold">{totalCities}개</span>
               </div>
             </div>
           </div>

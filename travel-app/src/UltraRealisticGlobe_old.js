@@ -656,7 +656,7 @@ const UltraRealisticGlobe = () => {
       {!hideBottomUI && !(isMobile || isIPad) && (
         // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
         <>
-          <div className="absolute top-6 right-20 z-10">
+          <div className="absolute top-2 right-20 z-10">
             {user ? (
               <button
                 onClick={handleSignOut}

@@ -40,11 +40,11 @@ const TravelStatsPanel = ({
 
   return (
     <div className={`absolute z-10 right-6 ${
-      isMobile || isMobileLandscape || isLargeMobileLandscape 
-        ? isLandscape 
-          ? 'top-6'   // 가로모드일 때는 원래 top-6로 복원
-          : 'top-14'  // 세로모드일 때만 더 위로 올림 (top-20 -> top-14)
-        : 'top-6'     // 데스크톱은 그대로
+      isMobileLandscape || isLargeMobileLandscape
+        ? 'top-0'   // 모바일 가로모드에서 상단바를 덮도록 붙임
+        : isMobile
+          ? 'top-6' // 모바일 세로
+          : 'top-2' // 데스크톱
     }`} ref={panelRef}>
       <div className="flex gap-2">
         {/* 여행지 추가 버튼 */}

@@ -81,15 +81,10 @@ const GlobeControls = ({
   return (
     <>
       {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute z-10
-        // 1. 기본 스타일 (모바일 세로/가로 모드)
-        top-14 left-3 
-  
-        // 2. 640px 이상 (sm: breakpoint)에서는 가로 모드 레이아웃 적용
-        sm:top-6 sm:left-6
-  
-        // 3. 768px 이상 (md: breakpoint, iPad 또는 데스크톱)에서는 최종 데스크톱 레이아웃 적용
-        md:top-6 md:left-6
+      <div className={`absolute z-10 ${
+        isMobileLandscape
+          ? 'top-0 left-2' // 아이폰 가로모드에서 상단바를 덮도록 위치
+          : 'top-14 left-3 sm:top-6 sm:left-6 md:top-6 md:left-6'
       }`}>
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
