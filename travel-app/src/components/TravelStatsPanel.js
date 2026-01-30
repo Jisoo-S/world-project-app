@@ -20,6 +20,10 @@ const TravelStatsPanel = ({
   const isMobileLandscape = isMobile && isLandscape;
   // 아이폰 프로맥스 등 큰 모바일 기기 감지
   const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 1024 && isLandscape && 'ontouchstart' in window;
+  // 안드로이드 기기 감지
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  // 가로모드에서 상단바를 덮을지 결정 (모든 모바일 기기에서 가로모드일 때)
+  const shouldCoverStatusBar = (isMobileLandscape || isLargeMobileLandscape) && isLandscape;
   const panelRef = useRef(null);
 
   // 외부 클릭 감지
@@ -39,14 +43,25 @@ const TravelStatsPanel = ({
   }, [showMobileStats, setShowMobileStats]);
 
   return (
-    <div className={`absolute z-10 right-6 ${
-      isMobileLandscape || isLargeMobileLandscape
-        ? 'top-0'   // 모바일 가로모드에서 상단바를 덮도록 붙임
+    <div className={`absolute right-6 ${
+      shouldCoverStatusBar
+        ? 'top-0 z-[9999]'   // 모바일 가로모드에서 상단바를 덮도록 매우 높은 z-index
         : isMobile
-          ? 'top-6' // 모바일 세로
-          : 'top-2' // 데스크톱
+          ? isAndroid && !isLandscape
+            ? 'top-1 z-10' // 안드로이드 세로모드 - 상단바 바로 아래
+            : 'top-1 z-10' // 다른 모바일 세로 - 상단바 바로 아래
+          : 'top-2 z-10' // 데스크톱
     }`} ref={panelRef}>
-      <div className="flex gap-2">
+      {/* 가로모드에서 상단바를 덮는 배경 레이어 (안드로이드 포함) */}
+      {shouldCoverStatusBar && (
+        <div className="absolute top-0 left-0 right-0 h-12 bg-slate-900/98 backdrop-blur-lg -z-10" 
+             style={{ marginLeft: '-1.5rem', marginRight: '-1.5rem' }} />
+      )}
+      <div className={`flex gap-2 relative ${
+        shouldCoverStatusBar
+          ? 'pt-8'   // 가로모드에서 상단바 영역을 위한 패딩
+          : ''
+      }`}>
         {/* 여행지 추가 버튼 */}
         <button
           onClick={() => setShowAddTravel(true)}
