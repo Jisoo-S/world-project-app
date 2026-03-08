@@ -18,12 +18,6 @@ const TravelStatsPanel = ({
   const isMobile = window.innerWidth <= 768;
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
-  // 아이폰 프로맥스 등 큰 모바일 기기 감지
-  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 1024 && isLandscape && 'ontouchstart' in window;
-  // 안드로이드 기기 감지
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  // 가로모드에서 상단바를 덮을지 결정 (모든 모바일 기기에서 가로모드일 때)
-  const shouldCoverStatusBar = (isMobileLandscape || isLargeMobileLandscape) && isLandscape;
   const panelRef = useRef(null);
 
   // 외부 클릭 감지
@@ -43,50 +37,38 @@ const TravelStatsPanel = ({
   }, [showMobileStats, setShowMobileStats]);
 
   return (
-    <div className={`absolute right-6 ${
-      shouldCoverStatusBar
-        ? 'top-0 z-[9999]'   // 모바일 가로모드에서 상단바를 덮도록 매우 높은 z-index
-        : isMobile
-          ? isAndroid && !isLandscape
-            ? 'top-1 z-10' // 안드로이드 세로모드 - 상단바 바로 아래
-            : 'top-1 z-10' // 다른 모바일 세로 - 상단바 바로 아래
-          : 'top-2 z-10' // 데스크톱
-    }`} ref={panelRef}>
-      {/* 가로모드에서 상단바를 덮는 배경 레이어 (안드로이드 포함) */}
-      {shouldCoverStatusBar && (
-        <div className="absolute top-0 left-0 right-0 h-12 bg-slate-900/98 backdrop-blur-lg -z-10" 
-             style={{ marginLeft: '-1.5rem', marginRight: '-1.5rem' }} />
-      )}
-      <div className={`flex gap-2 relative ${
-        shouldCoverStatusBar
-          ? 'pt-8'   // 가로모드에서 상단바 영역을 위한 패딩
-          : ''
-      }`}>
-        {/* 여행지 추가 버튼 */}
-        <button
-          onClick={() => setShowAddTravel(true)}
-          className="bg-emerald-600/90 hover:bg-emerald-700/90 backdrop-blur-lg rounded-xl shadow-2xl px-3 py-3 border border-emerald-500/30 text-white transition-all font-medium text-sm"
-          title="여행지 추가"
-        >
-          ✈️ 여행지 추가
-        </button>
-        
-        {/* 통계 버튼 */}
-        <button 
-          onClick={() => setShowMobileStats(!showMobileStats)}
-          className="bg-slate-900/95 backdrop-blur-lg rounded-xl shadow-2xl px-3 py-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
-        >
-          🌍
-        </button>
-      </div>
+    <div
+      className={`absolute right-6 ${
+        isMobile && !isLandscape ? 'top-14 z-30' : // 모바일 세로모드 - 상태바 바로 아래
+        isMobile && isLandscape ? 'top-4 z-10' : // 모바일 가로모드
+        'top-6 z-30' // 데스크톱
+      }`}
+      ref={panelRef}
+    >
+      <div className="flex gap-2 relative items-center"> {/* items-center 추가 */}
+  {/* 여행지 추가 버튼 */}
+  <button
+    onClick={() => setShowAddTravel(true)}
+    className="bg-emerald-600/90 hover:bg-emerald-700/90 backdrop-blur-lg rounded-xl shadow-2xl px-3 border border-emerald-500/30 text-white transition-all font-medium text-sm flex items-center justify-center h-[46px]" 
+    title="여행지 추가"
+  >
+    ✈️ 여행지 추가
+  </button>
+  
+  {/* 통계 버튼 */}
+  <button 
+    onClick={() => setShowMobileStats(!showMobileStats)}
+    className="bg-slate-900/95 backdrop-blur-lg rounded-xl shadow-2xl px-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all flex items-center justify-center h-[46px] w-[46px]"
+  >
+    🌍
+  </button>
+</div>
       
       {showMobileStats && (
         <div className={`absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 ${
           isMobileLandscape 
             ? 'mobile-landscape-stats-fixed overflow-y-auto' 
-            : isLargeMobileLandscape 
-              ? 'iphone-pro-landscape-stats-fixed overflow-y-auto'
-              : 'min-w-72 max-h-[80vh] overflow-y-auto'
+            : 'min-w-72 max-h-[80vh] overflow-y-auto'
         } p-6`}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold text-lg">📊 여행 통계</h3>
@@ -147,11 +129,7 @@ const TravelStatsPanel = ({
 
           
           <div className={`space-y-2 overflow-y-auto custom-scrollbar ${
-            isMobileLandscape 
-              ? 'max-h-32' 
-              : isLargeMobileLandscape 
-                ? 'max-h-32'
-                : 'max-h-48'
+            isMobileLandscape ? 'max-h-32' : 'max-h-48'
           }`}>
             {Object.entries(userTravelData).map(([countryEnglishName, data]) => {
               const style = getVisitStyle(data.visits);

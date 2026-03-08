@@ -191,9 +191,7 @@ const UserGuideModal = ({ show, onClose }) => {
     >
       <div 
         className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/20 ${
-          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-modal' : 
-          (window.innerWidth > 768 && window.innerWidth <= 1024 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
-          ''
+          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-modal' : ''
         }`}
         ref={modalContentRef}
         onClick={(e) => e.stopPropagation()}

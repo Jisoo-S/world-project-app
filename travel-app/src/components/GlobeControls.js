@@ -15,20 +15,12 @@ const GlobeControls = ({
   selectedLine,
   selectedCountry
 }) => {
-  // iPhone 감지
-  const isIPhone = navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPod/i);
-  // 안드로이드 기기 감지
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  
   const isMobile = window.innerWidth <= 768;
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
-  // 아이폰 프로맥스 등 큰 모바일 기기 감지
+  // 아이폰 프로/프로맥스 등 큰 모바일 기기 가로모드 감지
   const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 1024 && isLandscape && 'ontouchstart' in window;
-  // iPhone이면 항상 모바일로 처리, 아니면 기존 로직
-  const isAnyMobile = isIPhone ? true : (isMobile || isLargeMobileLandscape);
-  // 가로모드에서 상단바를 덮을지 결정 (모든 모바일 기기에서 가로모드일 때)
-  const shouldCoverStatusBar = (isMobileLandscape || isLargeMobileLandscape) && isLandscape;
+  const isAnyMobile = isMobile || isLargeMobileLandscape;
   const continentPanelRef = useRef(null);
 
   // 외부 클릭 감지 (모바일 대륙 패널)
@@ -84,122 +76,103 @@ const GlobeControls = ({
 
   return (
     <>
-      {/* 지구본 모드 선택 및 줌 컨트롤 */}
-      <div className={`absolute ${
-        shouldCoverStatusBar
-          ? 'top-0 left-2 z-[9999]' // 모바일 가로모드에서 상단바를 덮도록 매우 높은 z-index (안드로이드 포함)
-          : isMobile && isAndroid && !isLandscape
-            ? 'top-1 left-3 z-10' // 안드로이드 세로모드 - 상단바 바로 아래
-            : isMobile
-              ? 'top-1 left-3 z-10' // 다른 모바일 세로 - 상단바 바로 아래
-              : 'top-2 left-3 z-10 sm:top-6 sm:left-6 md:top-6 md:left-6' // 데스크톱
+  {/* 지구본 모드 선택 및 줌 컨트롤 */}
+      {/* 💡 변경점: 가로모드에서 숨기는 조건문 {(!isAnyMobile || !isLandscape) && ( 을 완전히 삭제했습니다! */}
+      <div className={`absolute left-6 z-20 ${
+        isMobile && !isLandscape ? 'top-14' : // 모바일 세로모드
+        isMobile && isLandscape ? 'top-4' :   // 모바일 가로모드
+        'top-6'                               // 데스크톱
       }`}>
-        {/* 가로모드에서 상단바를 덮는 배경 레이어 (안드로이드 포함) */}
-        {shouldCoverStatusBar && (
-          <div className="absolute top-0 left-0 w-full h-12 bg-slate-900/98 backdrop-blur-lg -z-10" 
-               style={{ marginLeft: '-0.5rem', width: 'calc(100% + 1rem)' }} />
-        )}
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
-          shouldCoverStatusBar
-            ? 'rounded-b-xl pt-8 pb-2.5 px-2.5 w-24'  // 가로모드에서 상단바를 덮는 패딩 추가 (안드로이드 포함)
-            : isIPhone 
-              ? 'rounded-xl p-2.5 w-24'
-              : isMobile 
-                ? 'rounded-xl p-2.5 w-24 mobile-landscape-mode-box'
-                : isLargeMobileLandscape
-                  ? 'rounded-xl p-2.5 w-24 iphone-pro-landscape-mode-box'
-                  : 'rounded-2xl p-4 w-40'
+          isAnyMobile
+            ? 'rounded-xl p-2.5 w-24'
+            : 'rounded-2xl p-2.5 w-32'
         }`}>
           <div className={`text-white font-medium mb-2 ${
             isAnyMobile ? 'text-xs' : 'text-sm font-bold mb-3'
           }`}>👀 모드</div>
-          <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
-            <button
-              onClick={() => changeGlobeMode('satellite')}
-              className={`w-full font-medium transition-all ${
-                isAnyMobile 
-                  ? 'px-1.5 py-1 rounded-md text-xs' 
-                  : 'px-3 py-1.5 rounded-lg text-xs'
-              } ${
-                globeMode === 'satellite' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              🛰️ 위성 
-            </button>
-            <button
-              onClick={() => changeGlobeMode('night')}
-              className={`w-full font-medium transition-all ${
-                isAnyMobile 
-                  ? 'px-1.5 py-1 rounded-md text-xs' 
-                  : 'px-3 py-1.5 rounded-lg text-xs'
-              } ${
-                globeMode === 'night' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              🌙 야간 
-            </button>
-            <button
-              onClick={() => changeGlobeMode('topographic')}
-              className={`w-full font-medium transition-all ${
-                isAnyMobile 
-                  ? 'px-1.5 py-1 rounded-md text-xs' 
-                  : 'px-3 py-1.5 rounded-lg text-xs'
-              } ${
-                globeMode === 'topographic' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              🗺️ 지형 
-            </button>
-          </div>
-          
-          {/* 줌 컨트롤 버튼들을 모드 박스 안에 */}
-          <div className={`flex flex-row gap-1 items-center justify-center ${
-            isAnyMobile ? 'mt-2' : 'mt-3'
-          }`}>
-            <button
-              onClick={() => {
-                if (globeRef.current) globeRef.current.zoomOut();
-              }}
-              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
-                isAnyMobile ? 'h-6 text-xs' : 'h-8 text-sm'
-              }`}
-            >
-              +
-            </button>
-            <button
-              onClick={() => {
-                if (globeRef.current) globeRef.current.zoomIn();
-              }}
-              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center ${
-                isAnyMobile ? 'h-6 text-xs' : 'h-8 text-sm'
-              }`}
-            >
-              -
-            </button>
+            <div className={isMobile ? 'space-y-1' : 'space-y-1.5'}>
+              <button
+                onClick={() => changeGlobeMode('satellite')}
+                className={`w-full font-medium transition-all ${
+                  isAnyMobile 
+                    ? 'px-1.5 py-1 rounded-md text-xs' 
+                    : 'px-3 py-1.5 rounded-lg text-xs'
+                } ${
+                  globeMode === 'satellite' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                🛰️ 위성 
+              </button>
+              <button
+                onClick={() => changeGlobeMode('night')}
+                className={`w-full font-medium transition-all ${
+                  isAnyMobile 
+                    ? 'px-1.5 py-1 rounded-md text-xs' 
+                    : 'px-3 py-1.5 rounded-lg text-xs'
+                } ${
+                  globeMode === 'night' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                🌙 야간 
+              </button>
+              <button
+                onClick={() => changeGlobeMode('topographic')}
+                className={`w-full font-medium transition-all ${
+                  isAnyMobile 
+                    ? 'px-1.5 py-1 rounded-md text-xs' 
+                    : 'px-3 py-1.5 rounded-lg text-xs'
+                } ${
+                  globeMode === 'topographic' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                🗺️ 지형 
+              </button>
+            </div>
+            
+            {/* 줌 컨트롤 버튼들을 모드 박스 안에 */}
+<div className={`flex flex-row gap-1 items-center justify-center w-full ${isAnyMobile ? 'mt-2' : 'mt-3'}`}>
+  <button
+    onClick={() => { if (globeRef.current) globeRef.current.zoomOut(); }}
+    className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center h-8 ${isAnyMobile ? 'text-xs' : 'text-sm'}`}
+  >
+    +
+  </button>
+  <button
+    onClick={() => { if (globeRef.current) globeRef.current.zoomIn(); }}
+    className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center h-8 ${isAnyMobile ? 'text-xs' : 'text-sm'}`}
+  >
+    -
+  </button>
+        </div>
           </div>
         </div>
-      </div>
 
-      {/* 컨트롤 패널 */}
+
+{/* 컨트롤 패널 */}
       {isAnyMobile ? (
-        <div className={`absolute bottom-6 right-6 z-10 transition-opacity duration-300 ${
+        // 💡 1. 왼쪽과 완벽히 똑같이 bottom-8 을 줍니다! (right-6 bottom-8)
+        <div className={`absolute right-6 bottom-11 z-20 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`} ref={continentPanelRef}>
             <button
               onClick={() => setShowContinentPanel(!showContinentPanel)}
-              className="bg-slate-900/95 backdrop-blur-lg rounded-full shadow-2xl p-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
+              // 💡 2. p-3 (상하좌우 패딩)을 삭제하고, 왼쪽 설정 버튼과 똑같이 h-12 w-12 를 추가합니다!
+              className="bg-slate-900/95 backdrop-blur-lg rounded-full shadow-2xl border border-white/20 text-white hover:bg-slate-800/95 transition-all flex items-center justify-center h-12 w-12 text-lg"
             >
               ▶️
             </button>
+
+
             {showContinentPanel && (
-              <div className={`absolute bottom-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4 ${
+              <div className={`absolute bottom-20 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4 ${
                 isMobileLandscape 
                   ? 'mobile-landscape-control-panel' 
                   : isLargeMobileLandscape 

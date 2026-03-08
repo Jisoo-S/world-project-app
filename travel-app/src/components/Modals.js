@@ -126,9 +126,7 @@ export const AddTravelModal = ({
       }}
     >
       <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 ${
-        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : 
-        (window.innerWidth > 768 && window.innerWidth <= 1024 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
-        ''
+        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
       }`}>
         <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 추가</h2>
         
@@ -250,9 +248,7 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
       }}
     >
       <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 ${
-        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : 
-        (window.innerWidth > 768 && window.innerWidth <= 1024 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-modal' :
-        ''
+        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
       }`}>
         <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 수정</h2>
         
@@ -401,9 +397,7 @@ export const AllTripsModal = ({
     >
       <div 
         className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden modal-scroll-container ${
-          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-trips-modal' : 
-          (window.innerWidth > 768 && window.innerWidth <= 1024 && window.innerHeight < window.innerWidth && 'ontouchstart' in window) ? 'iphone-pro-landscape-trips-modal' :
-          ''
+          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-trips-modal' : ''
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -489,20 +483,26 @@ export const AllTripsModal = ({
         </div>
 
         {allTrips.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-slate-700"> {/* Reduced mt and pt */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-slate-400">
-              <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+          <div className="mt-2 pt-2 border-t border-slate-700">
+            {/* 변경 1: grid-cols-1 삭제, grid-cols-3만 남기기 */}
+            <div className="grid grid-cols-3 gap-3 text-sm text-slate-400">
+              
+              {/* 변경 2: justify-between을 justify-center로 변경하고 gap-2로 통일 (가운데 정렬) */}
+              <div className="flex items-center justify-center gap-2">
                 <span>총 여행</span>
                 <span className="text-green-400 font-semibold">{totalTrips}회</span>
               </div>
-              <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+              
+              <div className="flex items-center justify-center gap-2">
                 <span>총 국가</span>
                 <span className="text-blue-400 font-semibold">{totalCountries}개국</span>
               </div>
-              <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+              
+              <div className="flex items-center justify-center gap-2">
                 <span>총 도시</span>
                 <span className="text-purple-400 font-semibold">{totalCities}개</span>
               </div>
+              
             </div>
           </div>
         )}

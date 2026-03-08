@@ -26,86 +26,26 @@ const UltraRealisticGlobe = () => {
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
-  const [isMobile, setIsMobile] = useState(() => {
-    // 초기값 설정 시 iPhone 체크
-    const ua = navigator.userAgent;
-    if (ua.match(/iPhone/i) || ua.match(/iPod/i)) return true;
-    return window.innerWidth <= 768;
-  });
-  const [isIPad, setIsIPad] = useState(false); // iPad 감지용 추가
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  const [isLandscape, setIsLandscape] = useState(() => window.innerHeight < window.innerWidth);
+  const [isIPad, setIsIPad] = useState(false); // iPad 감지용은 더 이상 사용하지 않지만, 기존 구조 호환용으로 남김
   const [renderKey, setRenderKey] = useState(0); // 강제 리렌더링용
 
   useEffect(() => {
-    // iPhone 감지 함수
-    const checkIsIPhone = () => {
-      const ua = navigator.userAgent;
-      // iPhone 감지 (모든 아이폰 포함)
-      if (ua.match(/iPhone/i)) return true;
-      // iPod Touch도 아이폰처럼 처리
-      if (ua.match(/iPod/i)) return true;
-      return false;
-    };
-    
-    // iPad 감지 함수 - iPhone이 아닌 경우만
-    const checkIsIPad = () => {
-      if (checkIsIPhone()) return false; // iPhone이면 iPad가 아님
-      
-      const ua = navigator.userAgent;
-      // iPad 감지 방법들
-      if (ua.match(/iPad/i)) return true;
-      
-      // iOS 13+ iPad는 Mac으로 보고
-      if (ua.match(/Mac/i) && navigator.maxTouchPoints > 1) return true;
-      
-      // iPad Pro의 경우
-      if (ua.indexOf('Macintosh') > -1 && 'ontouchend' in document) return true;
-      
-      return false;
-    };
-
     const handleResize = () => {
-      const isIPhone = checkIsIPhone();
-      const isIPadDevice = checkIsIPad();
-      
-      // iPhone이면 무조건 모바일 UI (화면 크기 무관)
-      if (isIPhone) {
-        setIsMobile(true);
-        setIsIPad(false);
-      }
-      // iPad면 무조건 iPad UI
-      else if (isIPadDevice) {
-        setIsMobile(false);
-        setIsIPad(true);
-      }
-      // 나머지는 화면 크기로 판단
-      else {
-        setIsMobile(window.innerWidth <= 768);
-        setIsIPad(false);
-      }
+      // 화면 너비와 방향 모두 업데이트
+      setIsMobile(window.innerWidth <= 768);
+      setIsLandscape(window.innerHeight < window.innerWidth);
+      setIsIPad(false);
       setRenderKey(prev => prev + 1); // 강제 리렌더링
     };
     
     const handleOrientationChange = () => {
       // 화면 회전 시 강제 리렌더링
       setTimeout(() => {
-        const isIPhone = checkIsIPhone();
-        const isIPadDevice = checkIsIPad();
-        
-        // iPhone이면 무조건 모바일 UI (화면 크기 무관)
-        if (isIPhone) {
-          setIsMobile(true);
-          setIsIPad(false);
-        }
-        // iPad면 무조건 iPad UI
-        else if (isIPadDevice) {
-          setIsMobile(false);
-          setIsIPad(true);
-        }
-        // 나머지는 화면 크기로 판단
-        else {
-          setIsMobile(window.innerWidth <= 768);
-          setIsIPad(false);
-        }
+        setIsMobile(window.innerWidth <= 768);
+        setIsLandscape(window.innerHeight < window.innerWidth);
+        setIsIPad(false);
         setRenderKey(prev => prev + 1); // 강제 리렌더링
       }, 150);
     };
@@ -484,10 +424,13 @@ const UltraRealisticGlobe = () => {
 
   const stats = getTravelStats();
 
+  // 모바일 버튼 위치 결정 로직
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black">
+      {/* 별 배경 + 지구본 레이어 (z-0) */}
       <div 
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full z-0"
         style={{
           background: `
             radial-gradient(4px 4px at 50px 80px, #fff, transparent),
@@ -509,7 +452,7 @@ const UltraRealisticGlobe = () => {
       />
       
       <div 
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full z-0"
         style={{
           background: `
             radial-gradient(2px 2px at 20px 30px, #fff, transparent),
@@ -551,7 +494,7 @@ const UltraRealisticGlobe = () => {
       />
       
       <div 
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full z-0"
         style={{
           background: `
             radial-gradient(1px 1px at 50px 50px, #fff, transparent),
@@ -576,7 +519,7 @@ const UltraRealisticGlobe = () => {
       />
       
       <div 
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full z-0"
         style={{
           background: `
             radial-gradient(0.8px 0.8px at 35px 25px, #fff, transparent),
@@ -610,7 +553,7 @@ const UltraRealisticGlobe = () => {
         }}
       />
 
-      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
+      <div className="absolute inset-0 w-full h-full z-0">
         <R3FGlobe
             ref={globeRef}
             globeMode={globeMode}
@@ -622,22 +565,23 @@ const UltraRealisticGlobe = () => {
       </div>
 
       <LoadingScreen isLoading={isInitialLoad || isLoading} loadingStatus={loadingStatus} />
-
-      {/* 로그인 버튼 및 사용자 정보 + 설정 버튼 */}
-      {!hideBottomUI && (isMobile || isIPad) ? (
-        // 모바일 및 iPad: 왼쪽 하단에 로그인/로그아웃과 설정 버튼
-        <div className="absolute bottom-6 left-6 z-10 flex gap-2">
+{/* 로그인/로그아웃 및 설정 버튼 */}
+{!hideBottomUI && (
+        // 💡 1. 여기서 꼭 bottom-8 을 확인하세요! (left-6 bottom-8)
+        <div className="absolute left-6 bottom-10 z-30 flex gap-2 items-end">
           {user ? (
             <>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+                // 💡 2. py-2 를 삭제하고 h-12 를 추가했습니다.
+                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg flex items-center justify-center h-12"
               >
                 Sign Out
               </button>
               <button
                 onClick={() => setShowSettings(true)}
-                className="bg-slate-900/95 backdrop-blur-lg rounded-lg shadow-2xl px-3 py-2 border border-white/20 text-white hover:bg-slate-800/95 transition-all"
+                // 💡 3. py-2, px-3 삭제하고 h-12 w-12 를 추가했습니다.
+                className="bg-slate-900/95 backdrop-blur-lg rounded-lg shadow-2xl border border-white/20 text-white hover:bg-slate-800/95 transition-all flex items-center justify-center h-12 w-12 text-lg"
               >
                 ⚙️
               </button>
@@ -645,46 +589,13 @@ const UltraRealisticGlobe = () => {
           ) : (
             <button
               onClick={() => setShowAuth(true)}
-              className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
+              // 💡 4. py-2 를 삭제하고 h-12 를 추가했습니다.
+              className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg flex items-center justify-center h-12"
             >
               Sign In
             </button>
           )}
         </div>
-      ) : null}
-      
-      {!hideBottomUI && !(isMobile || isIPad) && (
-        // 데스크톱: 왼쪽 하단에 설정 버튼, 오른쪽 상단에 로그인/로그아웃
-        <>
-          <div className="absolute top-2 right-20 z-10">
-            {user ? (
-              <button
-                onClick={handleSignOut}
-                className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-              >
-                Sign Out
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowAuth(true)}
-                className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 py-3 rounded-xl font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg"
-              >
-                Sign In
-              </button>
-            )}
-          </div>
-          {/* 데스크톱: 왼쪽 하단에 설정 버튼 */}
-          {user && (
-            <div className="absolute bottom-6 left-6 z-10">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl px-4 py-3 border border-white/20 text-white hover:bg-slate-800/95 transition-all font-medium text-sm flex items-center gap-2"
-              >
-                ⚙️ 설정
-              </button>
-            </div>
-          )}
-        </>
       )}
 
       <GlobeControls 
