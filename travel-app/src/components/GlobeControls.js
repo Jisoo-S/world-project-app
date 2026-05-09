@@ -172,13 +172,23 @@ const GlobeControls = ({
 
 
             {showContinentPanel && (
-              <div className={`absolute bottom-20 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 p-4 ${
-                isMobileLandscape 
-                  ? 'mobile-landscape-control-panel' 
-                  : isLargeMobileLandscape 
-                    ? 'iphone-pro-landscape-control-panel'
+              <div
+                className={`absolute ${
+                  isMobileLandscape || isLargeMobileLandscape ? 'bottom-32' : 'bottom-20'
+                } right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 ${
+                  isMobileLandscape || isLargeMobileLandscape ? '' : 'p-4'
+                } ${
+                  isMobileLandscape
+                    ? 'mobile-landscape-control-panel'
+                    : isLargeMobileLandscape
+                      ? 'iphone-pro-landscape-control-panel'
+                      : ''
+                } ${
+                  isMobileLandscape || isLargeMobileLandscape
+                    ? 'globe-controls-popover-landscape'
                     : ''
-              }`}>
+                }`}
+              >
                 <div className={`flex gap-4 ${
                   (isMobileLandscape || isLargeMobileLandscape) 
                     ? 'flex-row mobile-landscape-controls' 

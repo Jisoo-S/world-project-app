@@ -67,10 +67,12 @@ const TravelStatsPanel = ({
       {showMobileStats && (
         <div className={`absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 ${
           isMobileLandscape 
-            ? 'mobile-landscape-stats-fixed overflow-y-auto' 
+            ? 'mobile-landscape-stats-fixed' 
             : 'min-w-72 max-h-[80vh] overflow-y-auto'
-        } p-6`}>
-          <div className="flex items-center justify-between mb-4">
+        } p-6`}
+        style={isMobileLandscape ? { maxHeight: 'calc(100vh - 90px)', overflowY: 'auto', padding: '12px' } : {}}
+        >
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-bold text-lg">📊 여행 통계</h3>
             <div className="flex items-center gap-2">
               <button 
@@ -111,17 +113,17 @@ const TravelStatsPanel = ({
             </div>
           )}
           
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="text-center p-3 bg-gradient-to-br from-green-600/20 to-green-700/20 rounded-xl border border-green-500/30">
-              <div className="text-2xl font-bold text-green-400">{stats.totalVisits}</div>
+          <div className={`grid grid-cols-3 mb-3 ${isMobileLandscape ? 'gap-2' : 'gap-4'}`}>
+            <div className={`text-center bg-gradient-to-br from-green-600/20 to-green-700/20 rounded-xl border border-green-500/30 ${isMobileLandscape ? 'p-2' : 'p-3'}`}>
+              <div className={`font-bold text-green-400 ${isMobileLandscape ? 'text-xl' : 'text-2xl'}`}>{stats.totalVisits}</div>
               <div className="text-xs text-slate-400">총<br />여행</div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-br from-blue-600/20 to-blue-700/20 rounded-xl border border-blue-500/30">
-              <div className="text-2xl font-bold text-blue-400">{stats.totalCountries}</div>
+            <div className={`text-center bg-gradient-to-br from-blue-600/20 to-blue-700/20 rounded-xl border border-blue-500/30 ${isMobileLandscape ? 'p-2' : 'p-3'}`}>
+              <div className={`font-bold text-blue-400 ${isMobileLandscape ? 'text-xl' : 'text-2xl'}`}>{stats.totalCountries}</div>
               <div className="text-xs text-slate-400">방문 <br />국가</div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-br from-purple-600/20 to-purple-700/20 rounded-xl border border-purple-500/30">
-              <div className="text-2xl font-bold text-purple-400">{stats.totalCities}</div>
+            <div className={`text-center bg-gradient-to-br from-purple-600/20 to-purple-700/20 rounded-xl border border-purple-500/30 ${isMobileLandscape ? 'p-2' : 'p-3'}`}>
+              <div className={`font-bold text-purple-400 ${isMobileLandscape ? 'text-xl' : 'text-2xl'}`}>{stats.totalCities}</div>
               <div className="text-xs text-slate-400">방문 <br />도시</div>
             </div>
           </div>
@@ -129,7 +131,7 @@ const TravelStatsPanel = ({
 
           
           <div className={`space-y-2 overflow-y-auto custom-scrollbar ${
-            isMobileLandscape ? 'max-h-32' : 'max-h-48'
+            isMobileLandscape ? 'max-h-[calc(100vh-340px)]' : 'max-h-48'
           }`}>
             {Object.entries(userTravelData).map(([countryEnglishName, data]) => {
               const style = getVisitStyle(data.visits);

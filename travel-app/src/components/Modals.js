@@ -385,6 +385,9 @@ export const AllTripsModal = ({
     0
   );
 
+  const isMobileLandscape =
+    window.innerWidth <= 768 && window.innerHeight < window.innerWidth;
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -396,12 +399,13 @@ export const AllTripsModal = ({
       }}
     >
       <div 
-        className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden modal-scroll-container ${
-          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-trips-modal' : ''
+        className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 overflow-hidden modal-scroll-container flex flex-col ${
+          isMobileLandscape ? 'mobile-landscape-trips-modal' : 'max-h-[80vh]'
         }`}
+        style={(window.innerHeight < window.innerWidth && window.innerHeight <= 500) ? { maxHeight: '92vh', padding: '12px 16px' } : {}}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-shrink-0">
           <h2 className="text-white font-bold text-2xl flex items-center gap-2">
             🌍 전체 여행 기록
           </h2>
@@ -413,7 +417,7 @@ export const AllTripsModal = ({
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[60vh] custom-scrollbar">
+        <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
           {allTrips.length > 0 ? (
             <div className="space-y-4">
               {allTrips.map((trip, index) => (
@@ -483,22 +487,26 @@ export const AllTripsModal = ({
         </div>
 
         {allTrips.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-slate-700">
-            {/* 변경 1: grid-cols-1 삭제, grid-cols-3만 남기기 */}
-            <div className="grid grid-cols-3 gap-3 text-sm text-slate-400">
+          <div className="mt-2 pt-2 border-t border-slate-700 flex-shrink-0">
+            <div
+              className={`text-sm text-slate-400 ${
+                isMobileLandscape
+                  ? 'flex flex-wrap justify-start gap-x-4 gap-y-2'
+                  : 'grid grid-cols-3 gap-3'
+              }`}
+            >
               
-              {/* 변경 2: justify-between을 justify-center로 변경하고 gap-2로 통일 (가운데 정렬) */}
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-start gap-2">
                 <span>총 여행</span>
                 <span className="text-green-400 font-semibold">{totalTrips}회</span>
               </div>
               
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-start gap-2">
                 <span>총 국가</span>
                 <span className="text-blue-400 font-semibold">{totalCountries}개국</span>
               </div>
               
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-start gap-2">
                 <span>총 도시</span>
                 <span className="text-purple-400 font-semibold">{totalCities}개</span>
               </div>

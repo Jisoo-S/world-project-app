@@ -184,21 +184,24 @@ const UserGuideModal = ({ show, onClose }) => {
 
   if (!show) return null;
 
+  const isLandscape = window.innerHeight < window.innerWidth && window.innerHeight <= 500;
+
   return (
     <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
       onClick={handleOverlayClick}
     >
       <div 
-        className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/20 ${
-          (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-modal' : ''
+        className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl w-full max-w-md shadow-2xl border border-white/20 flex flex-col ${
+          isLandscape ? '' : 'p-6'
         }`}
+        style={isLandscape ? { maxHeight: '92vh', padding: '10px 16px', overflow: 'hidden' } : { maxHeight: '85vh' }}
         ref={modalContentRef}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-white text-xl font-bold">{pages[currentPage].title}</h2>
+        <div className="flex justify-between items-center flex-shrink-0" style={isLandscape ? { marginBottom: '4px' } : { marginBottom: '24px' }}>
+          <h2 className={`text-white font-bold ${isLandscape ? 'text-base' : 'text-xl'}`}>{pages[currentPage].title}</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white transition-colors text-2xl"
@@ -208,12 +211,12 @@ const UserGuideModal = ({ show, onClose }) => {
         </div>
 
         {/* 컨텐츠 영역 */}
-        <div className="mb-6 overflow-y-auto" style={{ height: '400px' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           {pages[currentPage].content}
         </div>
 
         {/* 페이지 인디케이터 */}
-        <div className="flex justify-center items-center gap-2 mb-4">
+        <div className={`flex justify-center items-center gap-2 flex-shrink-0 ${isLandscape ? 'my-1' : 'my-4'}`}>
           {pages.map((_, index) => (
             <div
               key={index}
@@ -227,7 +230,7 @@ const UserGuideModal = ({ show, onClose }) => {
         </div>
 
         {/* 네비게이션 버튼 */}
-        <div className="flex justify-between items-center gap-3">
+        <div className="flex justify-between items-center gap-3 flex-shrink-0">
           <button
             onClick={handlePrev}
             disabled={currentPage === 0}

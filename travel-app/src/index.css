@@ -58,14 +58,49 @@ code {
     max-height: 85vh !important;
     max-width: 90vw !important;
     width: auto !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 12px 16px !important;
   }
-  
+
+  /* 설정 모달 내부 스크롤 영역 */
+  .mobile-landscape-modal .settings-modal-body {
+    overflow-y: auto !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    max-height: calc(85vh - 100px) !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-right: 4px !important;
+  }
+
+  /* 가로 모드 모달 헤더 간격 축소 */
+  .mobile-landscape-modal .flex-shrink-0 {
+    margin-bottom: 8px !important;
+  }
+
+  /* 가로 모드 모달 내부 섹션 간격 축소 */
+  .mobile-landscape-modal .settings-modal-body .mb-6 {
+    margin-bottom: 12px !important;
+  }
+
+  .mobile-landscape-modal .settings-modal-body .mb-4 {
+    margin-bottom: 8px !important;
+  }
+
+  /* 가로 모드 입력 필드 높이 축소 */
+  .mobile-landscape-modal .settings-modal-body select,
+  .mobile-landscape-modal .settings-modal-body input,
+  .mobile-landscape-modal .settings-modal-body button {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
   /* 설정 모달 가로 모드 최적화 */
   @supports (-webkit-touch-callout: none) {
     /* iOS 전용: 설정 모달 크기 조정 */
     .mobile-landscape-modal {
-      max-height: 80vh !important;
+      max-height: 88vh !important;
       max-width: 85vw !important;
     }
   }
@@ -130,11 +165,25 @@ code {
     max-width: 6rem !important;
   }
   
-  /* 모바일 가로 모드에서 컨트롤 패널 위치 조정 */
+  /* 모바일 가로 모드에서 컨트롤 패널 — 짧은 뷰포트에서 하단 잘림 방지 */
   .mobile-landscape-control-panel {
     width: auto !important;
-    min-width: 320px !important;
-    max-width: 400px !important;
+    min-width: 300px !important;
+    max-width: 380px !important;
+    max-height: min(320px, calc(100vh - 108px)) !important;
+    max-height: min(320px, calc(100dvh - 108px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-landscape-control-panel .mobile-landscape-controls {
+    gap: 0.65rem !important;
+  }
+
+  .mobile-landscape-control-panel .mobile-landscape-continent-grid {
+    gap: 0.35rem !important;
   }
   
   /* 모바일 가로 모드에서 대륙 버튼 그리드 조정 */
@@ -153,7 +202,8 @@ code {
     width: 300px !important;
     max-width: 300px !important;
     height: auto !important;
-    max-height: 70vh !important;
+    max-height: calc(100vh - 80px) !important;
+    overflow-y: auto !important;
   }
   
   /* 여행 통계창 내부 스크롤 영역 */
@@ -243,8 +293,22 @@ code {
   
   .iphone-pro-landscape-control-panel {
     width: auto !important;
-    min-width: 320px !important;
-    max-width: 400px !important;
+    min-width: 300px !important;
+    max-width: 380px !important;
+    max-height: min(320px, calc(100vh - 108px)) !important;
+    max-height: min(320px, calc(100dvh - 108px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .iphone-pro-landscape-control-panel .iphone-pro-landscape-controls {
+    gap: 0.65rem !important;
+  }
+
+  .iphone-pro-landscape-control-panel .iphone-pro-landscape-continent-grid {
+    gap: 0.35rem !important;
   }
   
   .iphone-pro-landscape-continent-grid {
@@ -266,4 +330,46 @@ code {
     position: relative;
     z-index: 1;
   }
+}
+
+/*
+ * 지구본 ▶️ 가로모드 팝오버 — 미디어쿼리 없음 (JS가 클래스 부착).
+ * 기존 규칙은 (max-width:768px)+orientation 또는 pointer:coarse에 묶여
+ * 크롬 모바일 에뮬·일부 기기에서 클래스만 있고 스타일이 안 먹는 경우가 있었음.
+ */
+.globe-controls-popover-landscape {
+  box-sizing: border-box !important;
+  min-width: 252px !important;
+  max-width: min(340px, 90vw) !important;
+  max-height: min(248px, calc(100vh - 140px)) !important;
+  max-height: min(248px, calc(100svh - 140px)) !important;
+  max-height: min(248px, calc(100dvh - 140px)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 8px 10px !important;
+}
+
+.globe-controls-popover-landscape .mobile-landscape-controls {
+  gap: 0.5rem !important;
+}
+
+.globe-controls-popover-landscape .mobile-landscape-continent-grid,
+.globe-controls-popover-landscape .iphone-pro-landscape-continent-grid {
+  gap: 0.3rem !important;
+}
+
+.globe-controls-popover-landscape .mobile-landscape-globe-controls,
+.globe-controls-popover-landscape .iphone-pro-landscape-globe-controls {
+  gap: 0.35rem !important;
+}
+
+.globe-controls-popover-landscape .font-medium.text-sm.mb-2 {
+  margin-bottom: 0.25rem !important;
+}
+
+.globe-controls-popover-landscape .mobile-landscape-globe-controls button,
+.globe-controls-popover-landscape .iphone-pro-landscape-globe-controls button {
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
 }

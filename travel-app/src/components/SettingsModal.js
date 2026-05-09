@@ -85,13 +85,17 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
     }
   };
 
+  const isLandscape = window.innerHeight < window.innerWidth && window.innerHeight <= 500;
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={handleOverlayClick}>
-      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-white/20 ${
-        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-modal' : ''
-      }`} ref={modalContentRef} onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-white text-xl font-bold">⚙️ 설정</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={handleOverlayClick}>
+      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl w-full max-w-md shadow-2xl border border-white/20 ${
+        isLandscape ? 'mobile-landscape-modal' : 'p-6'
+      }`}
+      style={isLandscape ? { maxHeight: '90vh', padding: '10px 16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {}}
+      ref={modalContentRef} onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center flex-shrink-0" style={isLandscape ? { marginBottom: '4px' } : { marginBottom: '24px' }}>
+          <h2 className={`text-white font-bold ${isLandscape ? 'text-base' : 'text-xl'}`}>⚙️ 설정</h2>
           <button
             onClick={() => {
               // 탈퇴 확인 모달들이 열려있을 때는 설정 모달을 닫지 않음
@@ -106,6 +110,8 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
           </button>
         </div>
 
+        <div className={isLandscape ? 'settings-modal-body' : ''}
+          style={isLandscape ? { overflowY: 'auto', flex: 1, minHeight: 0, WebkitOverflowScrolling: 'touch' } : {}}>
         {/* 홈 국가 설정 */}
         <div className="mb-6">
           <label className="block text-white text-sm font-medium mb-2">
@@ -189,9 +195,10 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
             {updateMessage}
           </div>
         )}
+        </div>
 
-        {/* 버튼 */}
-        <div className="flex gap-3">
+        {/* 버튼 - 가로모드에서 스크롤 영역 밖에 고정 */}
+        <div className="flex gap-3 flex-shrink-0" style={isLandscape ? { paddingTop: '6px' } : {}}>
           <button
             onClick={() => {
               // 탈퇴 확인 모달들이 열려있을 때는 설정 모달을 닫지 않음
@@ -204,21 +211,23 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
               setConfirmPassword('');
               setUpdateMessage('');
             }}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg transition-all"
+            className={`flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 rounded-lg transition-all ${isLandscape ? 'py-2 text-sm' : 'py-3'}`}
           >
             취소
           </button>
           <button
             onClick={handleUpdateSettings}
             disabled={isUpdating}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isLandscape ? 'py-2 text-sm' : 'py-3'}`}
           >
             {isUpdating ? '업데이트 중...' : '저장'}
           </button>
         </div>
-        
-        {/* 회원 탈퇴 */}
-        <div className="mt-6 pt-4 border-t border-slate-700">
+
+        {/* 회원 탈퇴 - 취소/저장 아래, 구분선 아래 */}
+        <div
+          className={`border-t border-slate-700 flex-shrink-0 ${isLandscape ? 'mt-2 pt-2' : 'mt-4 pt-3'}`}
+        >
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="text-red-400 hover:text-red-300 text-xs transition-colors"
