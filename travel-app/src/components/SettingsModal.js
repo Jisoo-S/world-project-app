@@ -85,14 +85,14 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
     }
   };
 
-  const isLandscape = window.innerHeight < window.innerWidth && window.innerHeight <= 500;
+  const isLandscape = window.innerHeight < window.innerWidth && window.innerWidth <= 1280;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={handleOverlayClick}>
       <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl w-full max-w-md shadow-2xl border border-white/20 ${
         isLandscape ? 'mobile-landscape-modal' : 'p-6'
       }`}
-      style={isLandscape ? { maxHeight: '90vh', padding: '10px 16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {}}
+      style={isLandscape ? { maxHeight: '75vh', padding: '10px 16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {}}
       ref={modalContentRef} onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center flex-shrink-0" style={isLandscape ? { marginBottom: '4px' } : { marginBottom: '24px' }}>
           <h2 className={`text-white font-bold ${isLandscape ? 'text-base' : 'text-xl'}`}>⚙️ 설정</h2>

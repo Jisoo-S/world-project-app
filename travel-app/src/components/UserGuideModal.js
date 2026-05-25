@@ -4,15 +4,15 @@ const UserGuideModal = ({ show, onClose }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const modalContentRef = useRef(null);
 
-
   const pages = [
     {
       title: "🌍 사용 방법",
       content: (
-        // 💡 수정포인트: 모든 페이지의 최상단 div에 h-[400px] overflow-y-auto pr-2 추가
-        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">👀 모드 설정</h3>
+        <div className="space-y-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>👀</span> 모드 설정
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               지구본을 <span className="font-semibold text-blue-400">🛰️ 위성 / 🌙 야간 / 🗺️ 지형 </span>모드 중 원하는 뷰로 자유롭게 변경할 수 있습니다.
             </p>
@@ -21,13 +21,17 @@ const UserGuideModal = ({ show, onClose }) => {
             </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">📊 여행 통계</h3>
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>📊</span> 여행 통계
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               지금까지의 <span className="font-semibold text-blue-400">총 여행 횟수, 방문 국가, 방문 도시</span>를 확인할 수 있습니다.
             </p>
 
-            <h3 className="text-white text-ml font-semibold mb-2 text-base mt-2">전체 보기 - 🌏 전체 여행 기록</h3>
+            <h3 className="text-white font-semibold mb-2 text-base mt-4 flex items-center gap-2">
+              <span>🌏</span> 전체 여행 기록
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               나의 모든 여행 기록을 시간 순으로 한눈에 볼 수 있습니다.
             </p>
@@ -38,10 +42,11 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        // 💡 수정포인트 적용
-        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">🌏 대륙별 이동</h3>
+        <div className="space-y-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>🌏</span> 대륙별 이동
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed mt-2">
               <span className="font-semibold text-blue-400">AS</span> 아시아 / <span className="font-semibold text-blue-400">EU</span> 유럽 / <span className="font-semibold text-blue-400">NA</span> 북아메리카 / <span className="font-semibold text-blue-400">SA</span> 남아메리카 / <span className="font-semibold text-blue-400">AF</span> 아프리카 / <span className="font-semibold text-blue-400">OC</span> 오세아니아
             </p>
@@ -49,8 +54,10 @@ const UserGuideModal = ({ show, onClose }) => {
               원하는 대륙으로 한 번에 이동할 수 있습니다.
             </p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-3 text-base">🎮 지구본 조작</h3>
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-3 text-base flex items-center gap-2">
+              <span>🎮</span> 지구본 조작
+            </h3>
             <div className="space-y-2">
               <p className="text-gray-300 text-sm leading-relaxed">
                 <span className="font-semibold text-white">🏠 홈</span> : 홈 국가로 즉시 이동
@@ -66,17 +73,20 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        // 💡 수정포인트 적용
-        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">✈️ 여행지 추가</h3>
+        <div className="space-y-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>✈️</span> 여행지 추가
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               내가 방문한 <span className="font-semibold text-blue-400">국가 / 도시 / 시작·종료일</span>을 입력하여 추가하면 자동으로 나의 지구본에 기록이 저장됩니다.
             </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">📝 여행 기록 수정 및 삭제</h3>
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>📝</span> 여행 기록 수정 및 삭제
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               지구본이나 통계창에서 국가를 눌러 이동하면 여행 기록을 수정(✏️) · 삭제(🗑️)할 수 있습니다.
             </p>
@@ -90,10 +100,11 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        // 💡 수정포인트 적용
-        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">🛤️ 여행 경로 연결선</h3>
+        <div className="space-y-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>🛤️</span> 여행 경로 연결선
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               여행지를 추가하면, 홈 국가와 여행지가 자동으로 선으로 연결됩니다.
             </p>
@@ -108,21 +119,21 @@ const UserGuideModal = ({ show, onClose }) => {
             </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
             <h3 className="text-white font-semibold mb-3 text-base">경로 연결 예시</h3>
             <div className="space-y-3">
-              <div>
+              <div className="pb-3 border-b border-slate-700/50">
                 <p className="text-gray-400 text-xs mb-1">연속 여행</p>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  🇬🇧 영국 <span className="font-semibold text-xs">(2025-01-05~01-07)</span> → 🇩🇪 독일 <span className="font-semibold text-xs">(2025-01-07~01-13)</span>
+                  🇬🇧 영국 <span className="font-semibold text-xs text-slate-500">(01-05~01-07)</span> → 🇩🇪 독일 <span className="font-semibold text-xs text-slate-500">(01-07~01-13)</span>
                 </p>
                 <p className="text-blue-400 text-xs mt-1">→ 영국-독일 연결</p>
               </div>
               
-              <div className="pt-3 border-t border-slate-700">
+              <div>
                 <p className="text-gray-400 text-xs mb-1">중간 방문</p>
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  🇭🇰 홍콩 <span className="font-semibold text-xs">(2025-10-01~10-04)</span> 여행 중 🇲🇴 마카오 <span className="font-semibold text-xs">(2025-10-02)</span> 방문 시
+                  🇭🇰 홍콩 <span className="font-semibold text-xs text-slate-500">(10-01~10-04)</span> 여행 중 🇲🇴 마카오 <span className="font-semibold text-xs text-slate-500">(10-02)</span> 방문 시
                 </p>
                 <p className="text-blue-400 text-xs mt-1">→ 홍콩–마카오 연결</p>
               </div>
@@ -134,10 +145,11 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        // 💡 수정포인트 적용 및 불필요한 div 래퍼 제거
-        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">🌐 개별 국가 보기</h3>
+        <div className="space-y-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>🌐</span> 개별 국가 보기
+            </h3>
             <div className="text-gray-300 text-sm leading-relaxed space-y-1">
               <p>지구본이나 여행 통계창에서 국가를 누르면</p>
               <p>• 방문 횟수</p>
@@ -149,8 +161,10 @@ const UserGuideModal = ({ show, onClose }) => {
             </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h3 className="text-white font-semibold mb-2 text-base">⚙️ 설정</h3>
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-white font-semibold mb-2 text-base flex items-center gap-2">
+              <span>⚙️</span> 설정
+            </h3>
             <div className="text-gray-300 text-sm leading-relaxed space-y-1">
               <p>• 홈 국가 변경</p>
               <p>• 비밀번호 변경</p>
@@ -193,20 +207,24 @@ const UserGuideModal = ({ show, onClose }) => {
     <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
       onClick={handleOverlayClick}
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 16px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 16px)'
+      }}
     >
       <div 
         className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl w-full max-w-md shadow-2xl border border-white/20 flex flex-col ${
-          isLandscape ? '' : 'p-6'
+          isLandscape ? 'p-3' : 'p-6'
         }`}
-        style={isLandscape 
-          ? { height: '92vh', maxHeight: '92vh', padding: '10px 16px', overflow: 'hidden' } 
-          : { height: '75vh', maxHeight: '75vh' }
+        style={isLandscape
+          ? { height: '92vh', minHeight: '92vh', maxHeight: '92vh', overflow: 'hidden' }
+          : { height: '600px', minHeight: '600px', maxHeight: '85vh' }
         }
         ref={modalContentRef}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="flex justify-between items-center flex-shrink-0" style={isLandscape ? { marginBottom: '4px' } : { marginBottom: '24px' }}>
+        <div className="flex justify-between items-center flex-shrink-0" style={isLandscape ? { marginBottom: '4px' } : { height: '32px', marginBottom: '20px' }}>
           <h2 className={`text-white font-bold ${isLandscape ? 'text-base' : 'text-xl'}`}>{pages[currentPage].title}</h2>
           <button
             onClick={handleClose}
@@ -216,13 +234,16 @@ const UserGuideModal = ({ show, onClose }) => {
           </button>
         </div>
 
-        {/* 컨텐츠 영역 */}
-        <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* 컨텐츠 영역: 꽉 채우기 */}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {pages[currentPage].content}
         </div>
 
         {/* 페이지 인디케이터 */}
-        <div className={`flex justify-center items-center gap-2 flex-shrink-0 ${isLandscape ? 'my-1' : 'my-4'}`}>
+        <div className={`flex justify-center items-center gap-2 flex-shrink-0 ${isLandscape ? 'my-1' : 'h-8 mt-4 mb-2'}`}>
           {pages.map((_, index) => (
             <div
               key={index}
@@ -240,15 +261,9 @@ const UserGuideModal = ({ show, onClose }) => {
           <button
             onClick={handlePrev}
             disabled={currentPage === 0}
-            className="flex items-center justify-center w-12 h-12 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700"
+            className="flex items-center justify-center w-12 h-12 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -260,7 +275,7 @@ const UserGuideModal = ({ show, onClose }) => {
           {currentPage === pages.length - 1 ? (
             <button
               onClick={handleClose}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium h-12 rounded-lg transition-all"
             >
               완료
             </button>
@@ -269,13 +284,7 @@ const UserGuideModal = ({ show, onClose }) => {
               onClick={handleNext}
               className="flex items-center justify-center w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-6 w-6" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>

@@ -51,11 +51,11 @@ code {
   }
 }
 
-/* 모바일 가로 모드 최적화 */
-@media (max-width: 768px) and (orientation: landscape) {
+/* 모바일 가로 모드 최적화 (갤럭시 Z 폴드 및 태블릿 포함) */
+@media (max-width: 1024px) and (orientation: landscape) {
   /* 모바일 가로 모드에서 모든 모달창들을 화면 비율에 맞게 조정 */
   .mobile-landscape-modal {
-    max-height: 85vh !important;
+    max-height: 70vh !important;
     max-width: 90vw !important;
     width: auto !important;
     overflow: hidden !important;
@@ -69,7 +69,7 @@ code {
     overflow-y: auto !important;
     flex: 1 !important;
     min-height: 0 !important;
-    max-height: calc(85vh - 100px) !important;
+    max-height: calc(85vh - 120px) !important;
     -webkit-overflow-scrolling: touch !important;
     padding-right: 4px !important;
   }
@@ -96,21 +96,19 @@ code {
     padding-bottom: 8px !important;
   }
 
-  /* 설정 모달 가로 모드 최적화 */
-  @supports (-webkit-touch-callout: none) {
-    /* iOS 전용: 설정 모달 크기 조정 */
-    .mobile-landscape-modal {
-      max-height: 88vh !important;
-      max-width: 85vw !important;
-    }
+  /* 설정 모달 가로 모드 최적화 (Android & iOS 통합 비율 기반) */
+  .mobile-landscape-modal {
+    max-height: 85vh !important;
+    max-width: 90vw !important;
   }
-  
+
   /* 여행지 추가/수정 모달 가로 모드 최적화 */
   .mobile-landscape-add-modal {
-    max-height: 80vh !important;
+    max-height: 85vh !important;
     max-width: 500px !important;
     width: 85vw !important;
-    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   /* 전체 여행 기록 모달 가로 모드 최적화 */
@@ -202,7 +200,7 @@ code {
     width: 300px !important;
     max-width: 300px !important;
     height: auto !important;
-    max-height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 100px) !important;
     overflow-y: auto !important;
   }
   
@@ -282,7 +280,7 @@ code {
   }
   
   .iphone-pro-landscape-controls > div {
-    flex: 1 !important;
+    flex: none !important;
     min-width: 0 !important;
   }
   
@@ -341,9 +339,9 @@ code {
   box-sizing: border-box !important;
   min-width: 252px !important;
   max-width: min(340px, 90vw) !important;
-  max-height: min(248px, calc(100vh - 140px)) !important;
-  max-height: min(248px, calc(100svh - 140px)) !important;
-  max-height: min(248px, calc(100dvh - 140px)) !important;
+  max-height: min(180px, calc(100vh - 160px)) !important;
+  max-height: min(180px, calc(100svh - 160px)) !important;
+  max-height: min(180px, calc(100dvh - 160px)) !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;

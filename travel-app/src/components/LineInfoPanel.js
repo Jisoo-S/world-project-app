@@ -53,7 +53,8 @@ const LineInfoPanel = ({
   return (
     <div 
       ref={lineInfoRef}
-      className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 text-center min-w-[300px]"
+      className="absolute left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 text-center min-w-[300px]"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 44px)' }}
     >
       <button 
         onClick={() => {

@@ -125,12 +125,17 @@ export const AddTravelModal = ({
         }
       }}
     >
-      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 ${
-        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
-      }`}>
-        <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 추가</h2>
+      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 flex flex-col modal-scroll-container ${
+        (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
+      }`}
+      style={{
+        marginBottom: 'env(safe-area-inset-bottom, 0px)',
+        maxHeight: (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? '85vh' : 'auto'
+      }}
+      >
+        <h2 className="text-white font-bold text-xl mb-4 flex-shrink-0">✈️ 여행지 추가</h2>
         
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-1 custom-scrollbar flex-1 min-h-0 modal-scroll-container" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="relative">
             <label className="text-slate-300 text-sm block mb-2">국가</label>
             <input
@@ -216,7 +221,7 @@ export const AddTravelModal = ({
           </div>
         </div>
         
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-6 flex-shrink-0">
           <button
             onClick={handleCloseModal}
             className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
@@ -247,12 +252,17 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
         }
       }}
     >
-      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 ${
-        (window.innerWidth <= 768 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
-      }`}>
-        <h2 className="text-white font-bold text-xl mb-4">✈️ 여행지 수정</h2>
+      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-md w-full mx-4 flex flex-col modal-scroll-container ${
+        (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
+      }`}
+      style={{
+        marginBottom: 'env(safe-area-inset-bottom, 0px)',
+        maxHeight: (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? '85vh' : 'auto'
+      }}
+      >
+        <h2 className="text-white font-bold text-xl mb-4 flex-shrink-0">✈️ 여행지 수정</h2>
         
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-1 custom-scrollbar flex-1 min-h-0 modal-scroll-container" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div>
             <label className="text-slate-300 text-sm block mb-2">방문 도시</label>
             <input
@@ -287,7 +297,7 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
           </div>
         </div>
         
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-6 flex-shrink-0">
           <button
             onClick={() => setEditingTrip(null)}
             className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:bg-slate-600 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
@@ -320,11 +330,12 @@ export const AllTripsModal = ({
     if (showAllTrips) {
       // 배경 스크롤 차단 함수 - 모달 내부가 아닌 경우만 차단
       const preventBackgroundScroll = (e) => {
-        // 모달 내부 요소인지 확인
-        const modalContent = document.querySelector('.modal-scroll-container');
-        if (modalContent && !modalContent.contains(e.target)) {
-          e.preventDefault();
+        // .modal-scroll-container 클래스를 가진 요소나 그 자식인지 확인
+        if (e.target.closest('.modal-scroll-container')) {
+          // 스크롤 가능한 요소 내부라면 이벤트를 가로막지 않음
+          return;
         }
+        e.preventDefault();
       };
       
       // passive: false로 이벤트 리스너 등록
@@ -386,7 +397,7 @@ export const AllTripsModal = ({
   );
 
   const isMobileLandscape =
-    window.innerWidth <= 768 && window.innerHeight < window.innerWidth;
+    window.innerWidth <= 1024 && window.innerHeight < window.innerWidth;
 
   return (
     <div
@@ -402,7 +413,10 @@ export const AllTripsModal = ({
         className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 max-w-3xl w-full mx-4 overflow-hidden modal-scroll-container flex flex-col ${
           isMobileLandscape ? 'mobile-landscape-trips-modal' : 'max-h-[80vh]'
         }`}
-        style={(window.innerHeight < window.innerWidth && window.innerHeight <= 500) ? { maxHeight: '92vh', padding: '12px 16px' } : {}}
+        style={{
+          marginBottom: 'env(safe-area-inset-bottom, 0px)',
+          ...((window.innerHeight < window.innerWidth && window.innerHeight <= 500) ? { maxHeight: '75vh', padding: '12px 16px' } : {})
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6 flex-shrink-0">
@@ -417,7 +431,7 @@ export const AllTripsModal = ({
           </button>
         </div>
 
-        <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+        <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0 modal-scroll-container">
           {allTrips.length > 0 ? (
             <div className="space-y-4">
               {allTrips.map((trip, index) => (

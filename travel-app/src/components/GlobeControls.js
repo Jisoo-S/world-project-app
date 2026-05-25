@@ -15,11 +15,11 @@ const GlobeControls = ({
   selectedLine,
   selectedCountry
 }) => {
-  const isMobile = window.innerWidth <= 768;
+  const isMobile = window.innerWidth <= 1024;
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   // 아이폰 프로/프로맥스 등 큰 모바일 기기 가로모드 감지
-  const isLargeMobileLandscape = window.innerWidth > 768 && window.innerWidth <= 1024 && isLandscape && 'ontouchstart' in window;
+  const isLargeMobileLandscape = window.innerWidth > 1024 && window.innerWidth <= 1280 && isLandscape && 'ontouchstart' in window;
   const isAnyMobile = isMobile || isLargeMobileLandscape;
   const continentPanelRef = useRef(null);
 
@@ -81,7 +81,7 @@ const GlobeControls = ({
       <div className="absolute z-20"
         style={{
           left: '1.5%',
-          top: isMobile && !isLandscape ? '8px' :  // 모바일 세로모드 - 상태바 바로 아래
+          top: isMobile && !isLandscape ? 'calc(env(safe-area-inset-top, 0px) + 44px)' :  // 모바일 세로모드 - 상태바 바로 아래
                isMobile && isLandscape ? '2%' :   // 모바일 가로모드
                '2%'                               // 데스크톱
         }}
@@ -164,7 +164,7 @@ const GlobeControls = ({
         <div className={`absolute z-20 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        style={{ right: '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+        style={{ right: '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 40px)' }}
         ref={continentPanelRef}>
             <button
               onClick={() => setShowContinentPanel(!showContinentPanel)}
@@ -200,7 +200,7 @@ const GlobeControls = ({
                 }`}>
                   {/* 빠른 이동 - 대륙별 */}
                   <div>
-                    <div className="text-white font-medium text-sm mb-2 flex items-center gap-2">
+                    <div className="text-white font-medium text-sm mb-2 flex items-center gap-2 whitespace-nowrap">
                       <span className="text-base">🚀</span>
                       <span>대륙별 이동</span>
                     </div>
@@ -215,9 +215,7 @@ const GlobeControls = ({
                         <button
                           key={continent}
                           onClick={() => handleContinentClick(continent, countries)}
-                          className={`aspect-square bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-xl hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center font-bold shadow-lg ${
-                            (isMobileLandscape || isLargeMobileLandscape) ? 'text-xl' : 'text-xl'
-                          }`}
+                          className={`w-[35px] h-[38px] bg-gradient-to-r from-purple-600/50 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/20 hover:border-purple-400/50 flex items-center justify-center font-bold shadow-lg text-[13px]`}
                           title={description}
                         >
                           {flag}
@@ -241,14 +239,14 @@ const GlobeControls = ({
                     }`}>
                       <button 
                         onClick={resetView}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-1 py-1.5 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
                       >
                         <span className="text-base">🏠</span>
                         <span>홈</span>
                       </button>
                       <button 
                         onClick={toggleRotation}
-                        className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
+                        className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-1 py-1.5 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-2"
                       >
                         <span className="text-base">🔄</span>
                         <span>회전</span>
@@ -268,36 +266,43 @@ const GlobeControls = ({
           <div className="flex gap-6">
             {/* 빠른 이동 - 대륙별 */}
             <div>
-              <div className="text-white font-medium text-sm mb-3">🚀 대륙별 이동</div>
-              <div className="grid grid-cols-3 gap-2">
-                {continents.map(({continent, flag, countries, description}) => (
-                  <button
-                    key={continent}
-                    onClick={() => handleContinentClick(continent, countries)}
-                    className="w-[37px] h-[37px] bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-lg font-bold"
-                    title={description}
-                  >
-                    {flag}
-                  </button>
-                ))}
-              </div>
-            </div>
+             <div className="text-white font-medium text-sm mb-3 whitespace-nowrap">
+                 🚀 대륙별 이동
+               </div>
+
+               {/* 버튼 영역은 원래대로 3칸씩 나뉘는 grid 배열을 유지합니다. */}
+               <div className="grid grid-cols-3 gap-2">
+                 {continents.map(({continent, flag, countries, description}) => (
+                   <button
+                     key={continent}
+                     onClick={() => handleContinentClick(continent, countries)}
+                     className="w-[37px] h-[37px] bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-lg font-bold"
+                     title={description}
+                   >
+                     {continent}
+                   </button>
+                 ))}
+               </div>
+             </div>
             
             {/* 지구본 조작 */}
             <div>
               <div className="text-white font-medium text-sm mb-3">🎮 지구본 조작</div>
-              <div className="space-y-2">
-                <button 
+              <div className="flex gap-2">
+                <button
                   onClick={resetView}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex flex-col items-center justify-center gap-1"
+                                                                                              >
                 >
-                  🏠 홈
+                 <span className="text-lg">🏠</span>
+                       <span>홈</span>
                 </button>
-                <button 
+                <button
                   onClick={toggleRotation}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm"
+                 className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-2 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-1 whitespace-nowrap"
                 >
-                  🔄 회전
+                 <span className="text-lg">🔄</span>
+                       <span>회전</span>
                 </button>
               </div>
             </div>

@@ -15,7 +15,7 @@ const TravelStatsPanel = ({
   setShowAllTrips
 }) => {
   const [showLegend, setShowLegend] = useState(false);
-  const isMobile = window.innerWidth <= 768;
+  const isMobile = window.innerWidth <= 1024;
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   const panelRef = useRef(null);
@@ -40,12 +40,12 @@ const TravelStatsPanel = ({
     <div
       className={`absolute ${
         isMobile && !isLandscape ? 'z-30' :
-        isMobile && isLandscape ? 'z-10' :
+        isMobile && isLandscape ? 'z-40' :
         'z-30'
       }`}
       style={{
         right: '1.5%',
-        top: isMobile && !isLandscape ? '8px' :
+        top: isMobile && !isLandscape ? 'calc(env(safe-area-inset-top, 0px) + 44px)' :
              isMobile && isLandscape ? '2%' :
              '2%'
       }}
@@ -71,14 +71,14 @@ const TravelStatsPanel = ({
 </div>
       
       {showMobileStats && (
-        <div className={`absolute top-16 right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 ${
+        <div className={`absolute ${isMobileLandscape ? 'top-14' : 'top-16'} right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 ${
           isMobileLandscape 
             ? 'mobile-landscape-stats-fixed' 
             : 'min-w-72 max-h-[80vh] overflow-y-auto'
         } p-6`}
-        style={isMobileLandscape ? { maxHeight: 'calc(100vh - 90px)', overflowY: 'auto', padding: '12px' } : {}}
+        style={isMobileLandscape ? { maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', padding: '12px' } : {}}
         >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 flex-shrink-0">
             <h3 className="text-white font-bold text-lg">📊 여행 통계</h3>
             <div className="flex items-center gap-2">
               <button 
@@ -119,7 +119,7 @@ const TravelStatsPanel = ({
             </div>
           )}
           
-          <div className={`grid grid-cols-3 mb-3 ${isMobileLandscape ? 'gap-2' : 'gap-4'}`}>
+          <div className={`grid grid-cols-3 mb-3 flex-shrink-0 ${isMobileLandscape ? 'gap-2' : 'gap-4'}`}>
             <div className={`text-center bg-gradient-to-br from-green-600/20 to-green-700/20 rounded-xl border border-green-500/30 ${isMobileLandscape ? 'p-2' : 'p-3'}`}>
               <div className={`font-bold text-green-400 ${isMobileLandscape ? 'text-xl' : 'text-2xl'}`}>{stats.totalVisits}</div>
               <div className="text-xs text-slate-400">총<br />여행</div>
@@ -136,8 +136,8 @@ const TravelStatsPanel = ({
           
 
           
-          <div className={`space-y-2 overflow-y-auto custom-scrollbar ${
-            isMobileLandscape ? 'max-h-[calc(100vh-340px)]' : 'max-h-48'
+          <div className={`space-y-2 ${
+            isLandscape ? '' : 'overflow-y-auto custom-scrollbar max-h-60'
           }`}>
             {Object.entries(userTravelData).map(([countryEnglishName, data]) => {
               const style = getVisitStyle(data.visits);

@@ -26,7 +26,7 @@ const UltraRealisticGlobe = () => {
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [globeMode, setGlobeMode] = useState('satellite');
   const [zoomLevel, setZoomLevel] = useState(2.5);
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
   const [isLandscape, setIsLandscape] = useState(() => window.innerHeight < window.innerWidth);
   const [isIPad, setIsIPad] = useState(false); // iPad 감지용은 더 이상 사용하지 않지만, 기존 구조 호환용으로 남김
   const [renderKey, setRenderKey] = useState(0); // 강제 리렌더링용
@@ -34,7 +34,7 @@ const UltraRealisticGlobe = () => {
   useEffect(() => {
     const handleResize = () => {
       // 화면 너비와 방향 모두 업데이트
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 1024);
       setIsLandscape(window.innerHeight < window.innerWidth);
       setIsIPad(false);
       setRenderKey(prev => prev + 1); // 강제 리렌더링
@@ -43,7 +43,7 @@ const UltraRealisticGlobe = () => {
     const handleOrientationChange = () => {
       // 화면 회전 시 강제 리렌더링
       setTimeout(() => {
-        setIsMobile(window.innerWidth <= 768);
+        setIsMobile(window.innerWidth <= 1024);
         setIsLandscape(window.innerHeight < window.innerWidth);
         setIsIPad(false);
         setRenderKey(prev => prev + 1); // 강제 리렌더링
@@ -568,7 +568,7 @@ const UltraRealisticGlobe = () => {
 {/* 로그인/로그아웃 및 설정 버튼 */}
 {!hideBottomUI && (
         <div className="absolute z-30 flex gap-2 items-end"
-          style={{ left: '1.5%', bottom: isLandscape ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+          style={{ left: '1.5%', bottom: isLandscape ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 40px)' }}
         >
           {user ? (
             <>

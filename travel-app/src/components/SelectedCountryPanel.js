@@ -9,7 +9,7 @@ const SelectedCountryPanel = ({
   setEditingTrip,
   editingTrip  // editingTrip prop 추가
 }) => {
-  const isMobile = window.innerWidth <= 768;
+  const isMobile = window.innerWidth <= 1024;
   const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   const panelRef = useRef(null);
@@ -41,11 +41,12 @@ const SelectedCountryPanel = ({
   return (
     <div 
       ref={panelRef}
-      className={`absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 z-10 ${
+      className={`absolute left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 z-10 ${
         isMobile ? 'w-[calc(100%-2rem)]' : 'min-w-96 max-w-lg'
       } ${
         isMobileLandscape ? 'mobile-landscape-country-fixed' : ''
       }`}
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 44px)' }}
     >
       <button 
         onClick={() => {
