@@ -58,10 +58,23 @@ const TravelMarker = ({ point, onPointClick, onPointerOver, onPointerOut }) => {
     });
 
     return (
-        <mesh ref={meshRef} position={point.position} onClick={(e) => { e.stopPropagation(); onPointClick(point); }} onPointerOver={(e) => { e.stopPropagation(); setIsHovered(true); onPointerOver(point); }} onPointerOut={(e) => { e.stopPropagation(); setIsHovered(false); onPointerOut(); }}>
-            <sphereGeometry args={[1, 24, 24]} />
-            <meshBasicMaterial color={style.color} transparent opacity={0.8} />
-        </mesh>
+        <group position={point.position}>
+            {/* 시각적인 마커 */}
+            <mesh ref={meshRef}>
+                <sphereGeometry args={[1, 24, 24]} />
+                <meshBasicMaterial color={style.color} transparent opacity={0.8} />
+            </mesh>
+
+            {/* 클릭 인식 범위를 넓히기 위한 투명한 큰 구체 (반지름 0.8) */}
+            <mesh
+                onClick={(e) => { e.stopPropagation(); onPointClick(point); }}
+                onPointerOver={(e) => { e.stopPropagation(); setIsHovered(true); onPointerOver(point); }}
+                onPointerOut={(e) => { e.stopPropagation(); setIsHovered(false); onPointerOut(); }}
+            >
+                <sphereGeometry args={[0.8, 16, 16]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
+        </group>
     );
 };
 
