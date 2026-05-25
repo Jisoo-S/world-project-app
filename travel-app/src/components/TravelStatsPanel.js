@@ -38,11 +38,17 @@ const TravelStatsPanel = ({
 
   return (
     <div
-      className={`absolute right-6 ${
-        isMobile && !isLandscape ? 'top-14 z-30' : // 모바일 세로모드 - 상태바 바로 아래
-        isMobile && isLandscape ? 'top-4 z-10' : // 모바일 가로모드
-        'top-6 z-30' // 데스크톱
+      className={`absolute ${
+        isMobile && !isLandscape ? 'z-30' :
+        isMobile && isLandscape ? 'z-10' :
+        'z-30'
       }`}
+      style={{
+        right: '1.5%',
+        top: isMobile && !isLandscape ? '8px' :
+             isMobile && isLandscape ? '2%' :
+             '2%'
+      }}
       ref={panelRef}
     >
       <div className="flex gap-2 relative items-center"> {/* items-center 추가 */}

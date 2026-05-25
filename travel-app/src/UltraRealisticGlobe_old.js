@@ -567,20 +567,19 @@ const UltraRealisticGlobe = () => {
       <LoadingScreen isLoading={isInitialLoad || isLoading} loadingStatus={loadingStatus} />
 {/* 로그인/로그아웃 및 설정 버튼 */}
 {!hideBottomUI && (
-        // 💡 1. 여기서 꼭 bottom-8 을 확인하세요! (left-6 bottom-8)
-        <div className="absolute left-6 bottom-10 z-30 flex gap-2 items-end">
+        <div className="absolute z-30 flex gap-2 items-end"
+          style={{ left: '1.5%', bottom: isLandscape ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+        >
           {user ? (
             <>
               <button
                 onClick={handleSignOut}
-                // 💡 2. py-2 를 삭제하고 h-12 를 추가했습니다.
                 className="bg-red-600/90 hover:bg-red-700/90 text-white px-4 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg flex items-center justify-center h-12"
               >
                 Sign Out
               </button>
               <button
                 onClick={() => setShowSettings(true)}
-                // 💡 3. py-2, px-3 삭제하고 h-12 w-12 를 추가했습니다.
                 className="bg-slate-900/95 backdrop-blur-lg rounded-lg shadow-2xl border border-white/20 text-white hover:bg-slate-800/95 transition-all flex items-center justify-center h-12 w-12 text-lg"
               >
                 ⚙️
@@ -589,7 +588,6 @@ const UltraRealisticGlobe = () => {
           ) : (
             <button
               onClick={() => setShowAuth(true)}
-              // 💡 4. py-2 를 삭제하고 h-12 를 추가했습니다.
               className="bg-blue-600/90 hover:bg-blue-700/90 text-white px-4 rounded-lg font-medium transition-all duration-300 text-sm shadow-lg hover:shadow-xl backdrop-blur-lg flex items-center justify-center h-12"
             >
               Sign In

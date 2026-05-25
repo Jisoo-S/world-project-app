@@ -4,11 +4,13 @@ const UserGuideModal = ({ show, onClose }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const modalContentRef = useRef(null);
 
+
   const pages = [
     {
       title: "🌍 사용 방법",
       content: (
-        <div className="space-y-4">
+        // 💡 수정포인트: 모든 페이지의 최상단 div에 h-[400px] overflow-y-auto pr-2 추가
+        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
           <div className="bg-slate-800/50 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2 text-base">👀 모드 설정</h3>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -36,7 +38,8 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        <div className="space-y-4">
+        // 💡 수정포인트 적용
+        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
           <div className="bg-slate-800/50 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2 text-base">🌏 대륙별 이동</h3>
             <p className="text-gray-300 text-sm leading-relaxed mt-2">
@@ -63,7 +66,8 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        <div className="space-y-4">
+        // 💡 수정포인트 적용
+        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
           <div className="bg-slate-800/50 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2 text-base">✈️ 여행지 추가</h3>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -86,7 +90,8 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        <div className="space-y-4">
+        // 💡 수정포인트 적용
+        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
           <div className="bg-slate-800/50 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2 text-base">🛤️ 여행 경로 연결선</h3>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -129,8 +134,8 @@ const UserGuideModal = ({ show, onClose }) => {
     {
       title: "🌍 사용 방법",
       content: (
-        <div className="space-y-4">
-
+        // 💡 수정포인트 적용 및 불필요한 div 래퍼 제거
+        <div className="space-y-4 h-[400px] overflow-y-auto pr-2 scrollbar-hide">
           <div className="bg-slate-800/50 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2 text-base">🌐 개별 국가 보기</h3>
             <div className="text-gray-300 text-sm leading-relaxed space-y-1">
@@ -144,7 +149,6 @@ const UserGuideModal = ({ show, onClose }) => {
             </p>
           </div>
 
-          <div className="space-y-4">
           <div className="bg-slate-800/50 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2 text-base">⚙️ 설정</h3>
             <div className="text-gray-300 text-sm leading-relaxed space-y-1">
@@ -154,10 +158,9 @@ const UserGuideModal = ({ show, onClose }) => {
             </div>
           </div>
         </div>
-        </div>
       )
     }
-  ];
+];
 
   const handleOverlayClick = (event) => {
     if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
@@ -195,7 +198,10 @@ const UserGuideModal = ({ show, onClose }) => {
         className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl w-full max-w-md shadow-2xl border border-white/20 flex flex-col ${
           isLandscape ? '' : 'p-6'
         }`}
-        style={isLandscape ? { maxHeight: '92vh', padding: '10px 16px', overflow: 'hidden' } : { maxHeight: '85vh' }}
+        style={isLandscape 
+          ? { height: '92vh', maxHeight: '92vh', padding: '10px 16px', overflow: 'hidden' } 
+          : { height: '75vh', maxHeight: '75vh' }
+        }
         ref={modalContentRef}
         onClick={(e) => e.stopPropagation()}
       >

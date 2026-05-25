@@ -78,11 +78,14 @@ const GlobeControls = ({
     <>
   {/* 지구본 모드 선택 및 줌 컨트롤 */}
       {/* 💡 변경점: 가로모드에서 숨기는 조건문 {(!isAnyMobile || !isLandscape) && ( 을 완전히 삭제했습니다! */}
-      <div className={`absolute left-6 z-20 ${
-        isMobile && !isLandscape ? 'top-14' : // 모바일 세로모드
-        isMobile && isLandscape ? 'top-4' :   // 모바일 가로모드
-        'top-6'                               // 데스크톱
-      }`}>
+      <div className="absolute z-20"
+        style={{
+          left: '1.5%',
+          top: isMobile && !isLandscape ? '8px' :  // 모바일 세로모드 - 상태바 바로 아래
+               isMobile && isLandscape ? '2%' :   // 모바일 가로모드
+               '2%'                               // 데스크톱
+        }}
+      >
         {/* 지구본 모드 선택 */}
         <div className={`bg-slate-900/95 backdrop-blur-lg shadow-2xl border border-white/20 ${
           isAnyMobile
@@ -158,10 +161,11 @@ const GlobeControls = ({
 
 {/* 컨트롤 패널 */}
       {isAnyMobile ? (
-        // 💡 1. 왼쪽과 완벽히 똑같이 bottom-8 을 줍니다! (right-6 bottom-8)
-        <div className={`absolute right-6 bottom-11 z-20 transition-opacity duration-300 ${
+        <div className={`absolute z-20 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`} ref={continentPanelRef}>
+        }`}
+        style={{ right: '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+        ref={continentPanelRef}>
             <button
               onClick={() => setShowContinentPanel(!showContinentPanel)}
               // 💡 2. p-3 (상하좌우 패딩)을 삭제하고, 왼쪽 설정 버튼과 똑같이 h-12 w-12 를 추가합니다!
@@ -174,8 +178,8 @@ const GlobeControls = ({
             {showContinentPanel && (
               <div
                 className={`absolute ${
-                  isMobileLandscape || isLargeMobileLandscape ? 'bottom-32' : 'bottom-20'
-                } right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 ${
+                  isMobileLandscape || isLargeMobileLandscape ? 'bottom-14' : 'bottom-16'
+                } right-0 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10 ${
                   isMobileLandscape || isLargeMobileLandscape ? '' : 'p-4'
                 } ${
                   isMobileLandscape
@@ -256,9 +260,11 @@ const GlobeControls = ({
             )} 
           </div>
       ) : (
-        <div className={`absolute bottom-6 right-6 bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 transition-opacity duration-300 ${
+        <div className={`absolute bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}>
+        }`}
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)', right: '1.5%' }}
+        >
           <div className="flex gap-6">
             {/* 빠른 이동 - 대륙별 */}
             <div>
