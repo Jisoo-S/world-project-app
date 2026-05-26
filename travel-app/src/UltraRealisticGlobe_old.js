@@ -568,7 +568,7 @@ const UltraRealisticGlobe = () => {
 {/* 로그인/로그아웃 및 설정 버튼 */}
 {!hideBottomUI && (
         <div className="absolute z-30 flex gap-2 items-end"
-          style={{ left: '1.5%', bottom: isLandscape ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 40px)' }}
+          style={{ left: '1.5%', bottom: isLandscape ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 50px)' }}
         >
           {user ? (
             <>

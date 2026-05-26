@@ -164,7 +164,7 @@ const GlobeControls = ({
         <div className={`absolute z-20 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        style={{ right: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-right, 0px) + 10%)' : '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 40px)' }}
+        style={{ right: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-right, 0px) + 10%)' : '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 50px)' }}
         ref={continentPanelRef}>
             <button
               onClick={() => setShowContinentPanel(!showContinentPanel)}

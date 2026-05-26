@@ -46,7 +46,7 @@ const SelectedCountryPanel = ({
       } ${
         isMobileLandscape ? 'mobile-landscape-country-fixed' : ''
       }`}
-      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 44px)' }}
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 54px)' }}
     >
       <button 
         onClick={() => {

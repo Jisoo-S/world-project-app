@@ -156,7 +156,6 @@ export const AddTravelModal = ({
         (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
       } ${isKeyboardOpen ? 'mt-4' : 'my-auto'}`}
       style={{
-        marginBottom: 'env(safe-area-inset-bottom, 0px)',
         maxHeight: (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? '85vh' : 'auto'
       }}
       >
@@ -311,7 +310,6 @@ export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDesti
         (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? 'mobile-landscape-add-modal' : ''
       } ${isKeyboardOpen ? 'mt-4' : 'my-auto'}`}
       style={{
-        marginBottom: 'env(safe-area-inset-bottom, 0px)',
         maxHeight: (window.innerWidth <= 1024 && window.innerHeight < window.innerWidth) ? '85vh' : 'auto'
       }}
       >
