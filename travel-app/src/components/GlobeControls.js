@@ -261,48 +261,43 @@ const GlobeControls = ({
         <div className={`absolute bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 border border-white/20 z-10 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)', right: '1.5%' }}
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)', right: '1.5%', minWidth: '340px' }}
         >
-          <div className="flex gap-6">
+          <div className="flex gap-6 items-start">
             {/* 빠른 이동 - 대륙별 */}
             <div>
-             <div className="text-white font-medium text-sm mb-3 whitespace-nowrap">
-                 🚀 대륙별 이동
-               </div>
-
-               {/* 버튼 영역은 원래대로 3칸씩 나뉘는 grid 배열을 유지합니다. */}
+             <div className="text-white font-medium text-sm mb-3 whitespace-nowrap">🚀 대륙별 이동</div>
                <div className="grid grid-cols-3 gap-2">
                  {continents.map(({continent, flag, countries, description}) => (
                    <button
                      key={continent}
                      onClick={() => handleContinentClick(continent, countries)}
-                     className="w-[37px] h-[37px] bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-lg font-bold"
+                     className="w-[48px] h-[38px] bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-white rounded-lg hover:from-purple-600/50 hover:to-pink-600/50 transition-all duration-300 hover:-translate-y-0.5 border border-purple-500/30 hover:border-purple-400/50 flex items-center justify-center text-[13px] font-bold"
                      title={description}
                    >
-                     {continent}
+                     {flag}
                    </button>
                  ))}
                </div>
              </div>
             
             {/* 지구본 조작 */}
-            <div>
-              <div className="text-white font-medium text-sm mb-3">🎮 지구본 조작</div>
+            <div className="flex-1">
+              <div className="text-white font-medium text-sm mb-3 whitespace-nowrap">🎮 지구본 조작</div>
               <div className="flex gap-2">
                 <button
                   onClick={resetView}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex flex-col items-center justify-center gap-1"
-                                                                                              >
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-1 whitespace-nowrap"
                 >
                  <span className="text-lg">🏠</span>
-                       <span>홈</span>
+                 <span>홈</span>
                 </button>
                 <button
                   onClick={toggleRotation}
                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-2 py-2 rounded-xl font-semibold transition-all duration-300 hover:from-green-700 hover:to-green-800 hover:-translate-y-0.5 shadow-lg hover:shadow-xl text-sm flex items-center justify-center gap-1 whitespace-nowrap"
                 >
                  <span className="text-lg">🔄</span>
-                       <span>회전</span>
+                 <span>회전</span>
                 </button>
               </div>
             </div>

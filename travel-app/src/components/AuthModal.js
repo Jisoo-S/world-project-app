@@ -178,7 +178,9 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 transition-all duration-300"
+      className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 transition-all duration-300 ${
+        isKeyboardOpen ? 'items-start pt-10' : 'items-center'
+      }`}
       style={{
         height: isKeyboardOpen && window.visualViewport ? `${window.visualViewport.height}px` : '100%',
         top: 0
@@ -190,7 +192,9 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
         }
       }}
     >
-      <div className="bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 w-full max-w-md mx-4 my-auto max-h-[85vh] overflow-y-auto">
+      <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto ${
+        isKeyboardOpen ? 'mt-4' : 'my-auto'
+      }`}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">
             {isResetPassword ? '비밀번호 찾기' : (isSignUp ? '회원가입' : '로그인')}
