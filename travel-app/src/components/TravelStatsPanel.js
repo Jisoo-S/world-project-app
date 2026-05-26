@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { getVisitStyle } from '../data/countryData';
 
 const TravelStatsPanel = ({ 
-  showMobileStats, 
+  isMobile,
+  isLandscape,
+  showMobileStats,
   setShowMobileStats, 
   stats, 
   userTravelData, 
@@ -15,8 +17,6 @@ const TravelStatsPanel = ({
   setShowAllTrips
 }) => {
   const [showLegend, setShowLegend] = useState(false);
-  const isMobile = window.innerWidth <= 1024;
-  const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   const panelRef = useRef(null);
 
@@ -44,8 +44,8 @@ const TravelStatsPanel = ({
         'z-30'
       }`}
       style={{
-        right: '1.5%',
-        top: isMobile && !isLandscape ? 'calc(env(safe-area-inset-top, 0px) + 44px)' :
+        right: isMobile && isLandscape ? 'calc(env(safe-area-inset-right, 0px) + 10%)' : '1.5%',
+        top: isMobile && !isLandscape ? 'calc(env(safe-area-inset-top, 0px) + 8px)' :
              isMobile && isLandscape ? '2%' :
              '2%'
       }}

@@ -12,6 +12,7 @@ export const AddTravelModal = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   // 모달이 열릴 때마다 검색어 초기화
   useEffect(() => {
@@ -21,6 +22,26 @@ export const AddTravelModal = ({
       setSelectedIndex(-1);
     }
   }, [showAddTravel]);
+
+  // 키보드 상태 감지
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        if (viewportHeight < windowHeight * 0.8) {
+          setIsKeyboardOpen(true);
+        } else {
+          setIsKeyboardOpen(false);
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      return () => window.visualViewport.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   // 선택된 국가가 변경될 때 검색어 업데이트
   useEffect(() => {
@@ -118,7 +139,11 @@ export const AddTravelModal = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 transition-all duration-300"
+      style={{
+        height: isKeyboardOpen && window.visualViewport ? `${window.visualViewport.height}px` : '100%',
+        top: 0
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           handleCloseModal();
@@ -241,11 +266,37 @@ export const AddTravelModal = ({
 };
 
 export const EditTravelModal = ({ editingTrip, setEditingTrip, updateTravelDestination }) => {
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  // 키보드 상태 감지
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        if (viewportHeight < windowHeight * 0.8) {
+          setIsKeyboardOpen(true);
+        } else {
+          setIsKeyboardOpen(false);
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      return () => window.visualViewport.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
   if (!editingTrip) return null;
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 transition-all duration-300"
+      style={{
+        height: isKeyboardOpen && window.visualViewport ? `${window.visualViewport.height}px` : '100%',
+        top: 0
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           setEditingTrip(null);

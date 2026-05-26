@@ -598,6 +598,8 @@ const UltraRealisticGlobe = () => {
 
       <GlobeControls 
         key={`globe-controls-${renderKey}`}
+        isMobile={isMobile}
+        isLandscape={isLandscape}
         globeMode={globeMode}
         changeGlobeMode={changeGlobeMode}
         zoomLevel={zoomLevel}
@@ -615,6 +617,8 @@ const UltraRealisticGlobe = () => {
 
       <TravelStatsPanel 
         key={`travel-stats-${renderKey}`}
+        isMobile={isMobile}
+        isLandscape={isLandscape}
         showMobileStats={showMobileStats}
         setShowMobileStats={setShowMobileStats}
         stats={stats}

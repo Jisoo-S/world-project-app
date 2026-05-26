@@ -11,7 +11,8 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const modalRef = useRef(null);
@@ -65,26 +66,23 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
   // 키보드가 열릴 때 모달 위치 조정
   useEffect(() => {
     const handleResize = () => {
-      if (modalRef.current && window.visualViewport) {
+      if (window.visualViewport) {
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
         
-        if (viewportHeight < windowHeight) {
-          // 키보드가 열림
-          modalRef.current.style.height = `${viewportHeight}px`;
-          modalRef.current.style.alignItems = 'flex-start';
-          modalRef.current.style.paddingTop = '20px';
+        // 뷰포트 높이가 전체 높이보다 20% 이상 작아지면 키보드가 열린 것으로 판단
+        if (viewportHeight < windowHeight * 0.8) {
+          setIsKeyboardOpen(true);
         } else {
-          // 키보드가 닫힘
-          modalRef.current.style.height = '';
-          modalRef.current.style.alignItems = '';
-          modalRef.current.style.paddingTop = '';
+          setIsKeyboardOpen(false);
         }
       }
     };
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
+      // 초기 상태 체크
+      handleResize();
       return () => window.visualViewport.removeEventListener('resize', handleResize);
     }
   }, []);
@@ -180,7 +178,11 @@ const AuthModal = ({ showAuth, setShowAuth, onAuthSuccess }) => {
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 transition-all duration-300"
+      style={{
+        height: isKeyboardOpen && window.visualViewport ? `${window.visualViewport.height}px` : '100%',
+        top: 0
+      }}
       onClick={(e) => {
         // 배경 클릭 시 모달 닫기
         if (e.target === e.currentTarget) {

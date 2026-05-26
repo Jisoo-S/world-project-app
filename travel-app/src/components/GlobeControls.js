@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 
 const GlobeControls = ({
+  isMobile,
+  isLandscape,
   globeMode,
   changeGlobeMode,
   zoomLevel,
@@ -15,8 +17,6 @@ const GlobeControls = ({
   selectedLine,
   selectedCountry
 }) => {
-  const isMobile = window.innerWidth <= 1024;
-  const isLandscape = window.innerHeight < window.innerWidth;
   const isMobileLandscape = isMobile && isLandscape;
   // 아이폰 프로/프로맥스 등 큰 모바일 기기 가로모드 감지
   const isLargeMobileLandscape = window.innerWidth > 1024 && window.innerWidth <= 1280 && isLandscape && 'ontouchstart' in window;
@@ -81,7 +81,7 @@ const GlobeControls = ({
       <div className="absolute z-20"
         style={{
           left: '1.5%',
-          top: isMobile && !isLandscape ? 'calc(env(safe-area-inset-top, 0px) + 44px)' :  // 모바일 세로모드 - 상태바 바로 아래
+          top: isMobile && !isLandscape ? 'calc(env(safe-area-inset-top, 0px) + 8px)' :  // 모바일 세로모드 - 상태바 바로 아래
                isMobile && isLandscape ? '2%' :   // 모바일 가로모드
                '2%'                               // 데스크톱
         }}
@@ -164,7 +164,7 @@ const GlobeControls = ({
         <div className={`absolute z-20 transition-opacity duration-300 ${
           (selectedLine || selectedCountry) ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        style={{ right: '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 40px)' }}
+        style={{ right: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-right, 0px) + 10%)' : '1.5%', bottom: (isMobileLandscape || isLargeMobileLandscape) ? 'calc(env(safe-area-inset-bottom, 0px) + 28px)' : 'calc(env(safe-area-inset-bottom, 0px) + 40px)' }}
         ref={continentPanelRef}>
             <button
               onClick={() => setShowContinentPanel(!showContinentPanel)}

@@ -16,10 +16,31 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
   const [showFinalDeleteConfirm, setShowFinalDeleteConfirm] = useState(false);
   const [showWithdrawalComplete, setShowWithdrawalComplete] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   useEffect(() => {
     setSelectedHomeCountry(homeCountry);
   }, [homeCountry]);
+
+  // 키보드 상태 감지
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        if (viewportHeight < windowHeight * 0.8) {
+          setIsKeyboardOpen(true);
+        } else {
+          setIsKeyboardOpen(false);
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      return () => window.visualViewport.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   const handleUpdateSettings = async () => {
     if (!user) {
@@ -88,7 +109,9 @@ const SettingsModal = ({ showSettings, setShowSettings, user, homeCountry, setHo
   const isLandscape = window.innerHeight < window.innerWidth && window.innerWidth <= 1280;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={handleOverlayClick}>
+    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-2 transition-all duration-300 ${
+      isKeyboardOpen ? 'items-start pt-10' : 'items-center'
+    }`} onClick={handleOverlayClick}>
       <div className={`bg-slate-900/95 backdrop-blur-lg rounded-2xl w-full max-w-md shadow-2xl border border-white/20 ${
         isLandscape ? 'mobile-landscape-modal' : 'p-6'
       }`}
